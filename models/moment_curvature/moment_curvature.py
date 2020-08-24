@@ -5,8 +5,6 @@ import numpy as np
 import sympy as sp
 import traits.api as tr
 
-print('xxxxx')
-
 ###### Sympy symbols definition ######
 E_ct, E_cc, eps_cr, eps_tu, mu = sp.symbols(
     r'E_ct, E_cc, varepsilon_cr, varepsilon_tu, mu',
