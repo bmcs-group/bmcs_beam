@@ -119,20 +119,20 @@ class MomentCurvatureSymbolic(tr.HasStrictTraits):
         else:
             return sp.lambdify(self.z, self.b_z, 'numpy')
 
-    # get_eps_z = tr.Property(depends_on='model_params_items')
+    # get_eps_z = tr.Property(depends_on='model_data_mapping_items')
     get_eps_z = tr.Property()
 
     @tr.cached_property
     def _get_get_eps_z(self):
         return sp.lambdify((self.kappa, self.eps_bot, self.z), self.eps_z_.subs(self.subs_eps), 'numpy')
 
-    get_sig_c_z = tr.Property(depends_on='model_params_items')
+    get_sig_c_z = tr.Property(depends_on='model_data_mapping_items')
 
     @tr.cached_property
     def _get_get_sig_c_z(self):
         return sp.lambdify((self.kappa, self.eps_bot, self.z), self.sig_c_z_lin.subs(self.model_data_mapping), 'numpy')
 
-    # get_sig_s_eps = tr.Property(depends_on='model_params_items')
+    # get_sig_s_eps = tr.Property(depends_on='model_data_mapping_items')
     get_sig_s_eps = tr.Property()
 
     @tr.cached_property
