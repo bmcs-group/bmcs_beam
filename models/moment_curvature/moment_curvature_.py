@@ -1,36 +1,18 @@
-from scipy.optimize import newton, brentq, root
-
 import matplotlib.pyplot as plt
 import numpy as np
 import sympy as sp
 import traits.api as tr
+from scipy.optimize import root
 
-
-# For info (left is the notation in Mobasher paper, right is notation in this file):
-# ------------------------------------------------------------------
-# E = E_ct
-# E_c = E_cc
-# E_s = E_j
-# eps_cr = eps_cr
-# eps_cu = eps_cu
-# eps_tu = eps_tu
-# eps_cy = eps_cy
-# mu = mu
-
-# gamma = E_cc/E_ct
-# omega = eps_cy/eps_cr
-# lambda_cu = eps_cu/eps_cr
-# beta_tu = eps_tu/eps_cr
-# psi = eps_sy_j/eps_cr
-# n = E_j/E_ct
-# alpha = z_j/h
-
-# r = A_s_c/A_s_t
-
-# rho_g = A_j[0]/A_c # where A_j[0] must be tension steel area
-# ------------------------------------------------------------------
 
 class ModelData(tr.HasStrictTraits):
+    """This class holds all the data needed for the model, use the units [mm] - [N/mm^2] - [mm^2]"""
+
+    # Geometry
+    h = tr.Float(400)
+    b = tr.Float(200)                   # TODO check how to make this general to include variable b
+    # b = tr.Any                      # Can be a symbolic expression for the case of a varied b along height z
+
     # Concrete
     E_ct = tr.Float(24000)            # E modulus of concrete on tension
     E_cc = tr.Float(25000)            # E modulus of concrete on compression
@@ -38,14 +20,14 @@ class ModelData(tr.HasStrictTraits):
     eps_cy = tr.Float(-0.003)         # Concrete compressive yield strain
     eps_cu = tr.Float(-0.01)          # Ultimate concrete compressive strain
     eps_tu = tr.Float(0.003)          # Ultimate concrete tensile strain
-    mu = tr.Float(0.33)               # Post crack tensile strength parameter (represents how much strength is left
+    mu = tr.Float(0.33)               # Post crack tensile strength ratio (represents how much strength is left
                                       # after the crack because of short steel fibers in the mixture)
 
     # Reinforcement
-    z_j = tr.Array(np.float_, value=[10])                           # z positions of reinforcement layers
-    A_j = tr.Array(np.float_, value=[[np.pi * (16 / 2.) ** 2]])     # cross section area of reinforcement layers
-    E_j = tr.Array(np.float_, value=[[210000]])                     # E modulus of reinforcement layers
-    eps_sy_j = tr.Array(np.float_, value=[[500. / 210000.]])        # Steel yield strain
+    z_j = tr.Array(np.float_, value=[50])                         # z positions of reinforcement layers
+    A_j = tr.Array(np.float_, value=[np.pi * (16 / 2.) ** 2])     # cross section area of reinforcement layers
+    E_j = tr.Array(np.float_, value=[210000])                     # E modulus of reinforcement layers
+    eps_sy_j = tr.Array(np.float_, value=[500. / 210000.])        # Steel yield strain
 
 
 class MomentCurvatureSymbolic(tr.HasStrictTraits):
@@ -62,20 +44,22 @@ class MomentCurvatureSymbolic(tr.HasStrictTraits):
     eps_sy, E_s = sp.symbols('varepsilon_sy, E_s')
     eps = sp.Symbol('varepsilon', real=True)
 
+    # Sympy expressions
     eps_z_ = tr.Any
     subs_eps = tr.Any
     sig_c_z_lin = tr.Any
     sig_s_eps = tr.Any
-    subs_eps = tr.Any
 
     model_data = tr.Instance(ModelData)
 
     def _model_data_default(self):
         return ModelData()
 
-    model_params = tr.Property
+    model_data_mapping = tr.Property
 
-    def _get_model_params(self):
+    def _get_model_data_mapping(self):
+        # This is a mapping between each symbol and its numerical value so they can be used to get conciser symbolic
+        # expressions later
         return {
             self.E_ct: self.model_data.E_ct,
             self.E_cc: self.model_data.E_cc,
@@ -88,6 +72,7 @@ class MomentCurvatureSymbolic(tr.HasStrictTraits):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Here all the symbolic expressions are prepared
 
         # Linear profile of strain over the cross section height
         self.eps_z_ = self.eps_bot + self.z * (self.eps_top - self.eps_bot) / self.h
@@ -121,28 +106,33 @@ class MomentCurvatureSymbolic(tr.HasStrictTraits):
             (self.E_s * self.eps_sy, self.eps >= self.eps_sy)
         )
 
+    # TODO, b_z is a sympy expression that describes how b changes with z (in current state symbol "z" MUST be used)
     b_z = tr.Any
     get_b_z = tr.Property
 
     @tr.cached_property
     def _get_get_b_z(self):
-        return sp.lambdify(self.z, self.b_z, 'numpy')
+        # If b_z is provided return a function that returns b_z values for each given z
+        # otherwise return a function that returns always a constant "b" value
+        if self.b_z is None:
+            return lambda temp: self.model_data.b
+        else:
+            return sp.lambdify(self.z, self.b_z, 'numpy')
 
-
-    # get_eps_z = tr.Property(depends_on='model_params_items')
+    # get_eps_z = tr.Property(depends_on='model_data_mapping_items')
     get_eps_z = tr.Property()
 
     @tr.cached_property
     def _get_get_eps_z(self):
         return sp.lambdify((self.kappa, self.eps_bot, self.z), self.eps_z_.subs(self.subs_eps), 'numpy')
 
-    get_sig_c_z = tr.Property(depends_on='model_params_items')
+    get_sig_c_z = tr.Property(depends_on='model_data_mapping_items')
 
     @tr.cached_property
     def _get_get_sig_c_z(self):
-        return sp.lambdify((self.kappa, self.eps_bot, self.z), self.sig_c_z_lin.subs(self.model_params), 'numpy')
+        return sp.lambdify((self.kappa, self.eps_bot, self.z), self.sig_c_z_lin.subs(self.model_data_mapping), 'numpy')
 
-    # get_sig_s_eps = tr.Property(depends_on='model_params_items')
+    # get_sig_s_eps = tr.Property(depends_on='model_data_mapping_items')
     get_sig_s_eps = tr.Property()
 
     @tr.cached_property
@@ -158,9 +148,6 @@ class MomentCurvature(tr.HasStrictTraits):
     def _mcs_default(self):
         return MomentCurvatureSymbolic()
 
-    h = tr.Float
-
-    model_params = tr.DelegatesTo('mcs')
     model_data = tr.DelegatesTo('mcs')
 
     # Number of material points along the height of the cross section
@@ -170,7 +157,7 @@ class MomentCurvature(tr.HasStrictTraits):
 
     @tr.cached_property
     def _get_z_m(self):
-        return np.linspace(0, self.h, self.n_m)
+        return np.linspace(0, self.model_data.h, self.n_m)
 
     kappa_range = tr.Tuple(-0.001, 0.001, 101)
 
@@ -182,13 +169,14 @@ class MomentCurvature(tr.HasStrictTraits):
 
     # Normal force
     def get_N_s_tj(self, kappa_t, eps_bot_t):
-        eps_z_tj = self.mcs.get_eps_z(kappa_t[:, np.newaxis], eps_bot_t[:, np.newaxis], self.model_data.z_j[np.newaxis, :])
+        eps_z_tj = self.mcs.get_eps_z(kappa_t[:, np.newaxis], eps_bot_t[:, np.newaxis],
+                                      self.model_data.z_j[np.newaxis, :])
         sig_s_tj = self.mcs.get_sig_s_eps(eps_z_tj, self.model_data.E_j, self.model_data.eps_sy_j)
         return np.einsum('j,tj->tj', self.model_data.A_j, sig_s_tj)
 
     def get_N_c_t(self, kappa_t, eps_bot_t):
         z_tm = self.z_m[np.newaxis, :]
-        b_z_m = self.mcs.get_b_z(z_tm)  # self.get_b_z(self.z_m) also OK
+        b_z_m = self.mcs.get_b_z(z_tm)  # self.mcs.get_b_z(self.z_m) also OK
         N_z_tm = b_z_m * self.mcs.get_sig_c_z(kappa_t[:, np.newaxis], eps_bot_t[:, np.newaxis], z_tm)
         return np.trapz(N_z_tm, x=z_tm, axis=-1)
 
@@ -199,9 +187,7 @@ class MomentCurvature(tr.HasStrictTraits):
     # SOLVER: Get eps_bot to render zero force
 
     eps_bot_t = tr.Property()
-    r'''Resolve the tensile strain to get zero normal force 
-    for the prescribed curvature
-    '''
+    r'''Resolve the tensile strain to get zero normal force for the prescribed curvature'''
 
     def _get_eps_bot_t(self):
         res = root(lambda eps_bot_t: self.get_N_t(self.kappa_t, eps_bot_t),
@@ -265,7 +251,7 @@ class MomentCurvature(tr.HasStrictTraits):
 
     def _get_M_norm(self):
         # Section modulus @TODO optimize W for var b
-        W = (self.b * self.h ** 2) / 6
+        W = (self.b * self.model_data.h ** 2) / 6
         sig_cr = self.model_data.E_ct * self.model_data.eps_cr
         return W * sig_cr
 
@@ -275,8 +261,7 @@ class MomentCurvature(tr.HasStrictTraits):
         return self.kappa_cr
 
     def get_kappa(self, M):
-        '''cut off the descending tails
-        '''
+        """cut off the descending tails"""
         I_M = np.where(self.M_t[1:] - self.M_t[:-1] > 0)
         M_I = self.M_t[I_M]
         kappa_I = self.kappa_t[I_M]
@@ -334,110 +319,29 @@ class MomentCurvature(tr.HasStrictTraits):
 
 
 if __name__ == '__main__':
-    # Parameters entry
-    # (Values from parametric study in paper p.11 to draw Fig. 7)
-    z = sp.Symbol('z')
-
-    E_ct_ = 24000
-    eps_cr_ = 0.000125
-    gamma_ = 1
-    omega_ = 8.5
-    lambda_cu_ = 28
-    beta_tu_ = 160
-    psi_ = 16
-    n_ = 8.75
-    alpha_ = 0.9
-
-    mu_ = 0.33
-    rho_g_ = 0.003
-
-    # not given in paper
-    r_ = 0.0
-
-    h_ = 666
-    zeta = 0.15  # WHY USING 0.15, 0.2 ... gives wrong results!!!
-    b_w = 50  # o = 0.1
-    b_f = 500
-    h_w = (1 - zeta) * h_
-
-    # Substituting formulas:
-    E_cc_ = gamma_ * E_ct_
-    eps_cy_ = omega_ * eps_cr_
-    eps_cu_ = lambda_cu_ * eps_cr_
-    eps_tu_ = beta_tu_ * eps_cr_
-    eps_sy_j_ = np.array([psi_ * eps_cr_, psi_ * eps_cr_])
-    E_j_ = np.array([n_ * E_ct_, n_ * E_ct_])
-    z_j_ = np.array([h_ * (1 - alpha_), alpha_ * h_])
-
-    # Defining a variable b
-    b_z_ = sp.Piecewise(
-        (b_w, z < h_w),
-        (b_f, z >= h_w)
-    )
-
-    A_c_ = sp.integrate(b_z_, (z, 0, h_))
-    A_s_t_ = rho_g_ * A_c_
-    A_s_c_ = r_ * A_s_t_
-    A_j_ = np.array([A_s_t_, A_s_c_])  # A_j[0] must be tension steel area
-
-    ''' Creating MomentCurvature object '''
-
     mc = MomentCurvature(idx=25, n_m=100)
-    mc.h = h_
-    # mc.b_z = b_z_
-    # mc.model_params = {E_ct: E_ct_,
-    #                    E_cc: E_cc_,
-    #                    eps_cr: eps_cr_,
-    #                    eps_cy: eps_cy_,
-    #                    eps_cu: eps_cu_,
-    #                    mu: mu_,
-    #                    eps_tu: eps_tu_}
 
-    mc.mcs.b_z = b_z_
-
-    model_data = ModelData()
-    model_data.E_ct = E_ct_
-    model_data.E_cc = E_cc_
-    model_data.eps_cr = eps_cr_
-    model_data.eps_cy = eps_cy_
-    model_data.eps_cu = eps_cu_
-    model_data.mu = mu_
-    model_data.eps_tu = eps_tu_
-
-    model_data.z_j = z_j_
-    model_data.A_j = A_j_
-    model_data.E_j = E_j_
-
-    mc.model_data = model_data
-
-    # mc.z_j = z_j_
-    # mc.A_j = A_j_
-    # mc.E_j = E_j_
-
-    if True:
+    if False:
         # If plot_norm is used, use the following:
         # mc.kappa_range = (0, mc.kappa_cr * 100, 100)
-
         mc.kappa_range = (-0.00002, 0.00002, 100)
-
-        # print('XXX', mc.kappa_cr)
 
         # Plotting
         fig, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 5))
         mc.plot(ax1, ax2)
         plt.show()
 
-    # mc = MomentCurvature(idx=25, n_m=100)
-    #
-    # M_range = np.linspace(-40, 70, 100)
-    # kappa = mc.get_kappa(M_range * 1e+6)
-    # print(kappa)
-    #
-    # fig, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 5))
-    # mc.plot(ax1, ax2)
-    # plt.show()
-    #
-    # # Plotting
-    # fig, ax1 = plt.subplots(1, 1, figsize=(10, 5))
-    # plt.plot(M_range, kappa)
-    # plt.show()
+    # Test getting kappa by providing Moment values
+    if True:
+        M_range = np.linspace(-40, 70, 100)
+        kappa = mc.get_kappa(M_range * 1e+6)
+        print(kappa)
+
+        fig, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 5))
+        mc.plot(ax1, ax2)
+        plt.show()
+
+        # Plotting
+        fig, ax1 = plt.subplots(1, 1, figsize=(10, 5))
+        plt.plot(M_range, kappa)
+        plt.show()

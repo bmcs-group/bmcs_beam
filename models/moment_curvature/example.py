@@ -1,0 +1,45 @@
+import sympy as sp
+import numpy as np
+import matplotlib.pyplot as plt
+from moment_curvature.moment_curvature_ import MomentCurvature, ModelData
+
+if __name__ == '__main__':
+    model_data = ModelData()
+
+    # Material parameters [mm], [N/mm2]
+    model_data.h = 666
+    model_data.E_ct = 24000
+    model_data.E_cc = 24000
+    model_data.eps_cr = 0.000125
+    model_data.eps_cy = 0.0010625  # 8.5 * eps_cr_
+    model_data.eps_cu = 0.0035
+    model_data.eps_tu = 0.02
+    model_data.mu = 0.33
+
+    # Defining a variable width b_z_ (T-section as an example)
+    # (if constant b is needed just set model_data.b value)
+    b_w = 50
+    b_f = 500
+    h_w = 0.85 * model_data.h
+    z = sp.Symbol('z')
+    b_z_ = sp.Piecewise((b_w, z < h_w), (b_f, z >= h_w))
+
+    # 2 layers reinforcement details
+    model_data.A_j = np.array([250, 0])  # A_j[0] for tension steel / A_j[1] for compression steel
+    model_data.z_j = np.array([0.1 * model_data.h, 0.9 * model_data.h])
+    model_data.E_j = np.array([210000, 210000])
+    model_data.eps_sy_j = np.array([0.002, 0.002])
+
+    # Creating MomentCurvature object
+    mc = MomentCurvature(idx=25, n_m=100)
+    mc.mcs.b_z = b_z_
+    mc.model_data = model_data
+
+    # If plot_norm is used, use the following:
+    # mc.kappa_range = (0, mc.kappa_cr * 100, 100
+    mc.kappa_range = (-0.00002, 0.00002, 100)
+
+    # Plotting
+    fig, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 5))
+    mc.plot(ax1, ax2)
+    plt.show()
