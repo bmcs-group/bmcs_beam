@@ -10,8 +10,7 @@ class ModelData(tr.HasStrictTraits):
 
     # Geometry
     h = tr.Float(400)
-    b = tr.Float(200)                   # TODO check how to make this general to include variable b
-    # b = tr.Any                      # Can be a symbolic expression for the case of a varied b along height z
+    b = tr.Any(200)                   # Can be constant or sympy expression for the case of a varied b along height z
 
     # Concrete
     E_ct = tr.Float(24000)            # E modulus of concrete on tension
@@ -106,18 +105,16 @@ class MomentCurvatureSymbolic(tr.HasStrictTraits):
             (self.E_s * self.eps_sy, self.eps >= self.eps_sy)
         )
 
-    # TODO, b_z is a sympy expression that describes how b changes with z (in current state symbol "z" MUST be used)
-    b_z = tr.Any
     get_b_z = tr.Property
 
     @tr.cached_property
     def _get_get_b_z(self):
-        # If b_z is provided return a function that returns b_z values for each given z
-        # otherwise return a function that returns always a constant "b" value
-        if self.b_z is None:
-            return lambda temp: self.model_data.b
+        # If b is a constant number return a lambda function that always returns a constant "b" value
+        # otherwise return a function that returns b_z values for each given z
+        if isinstance(self.model_data.b, int) or isinstance(self.model_data.b, float):
+            return lambda place_holder: self.model_data.b
         else:
-            return sp.lambdify(self.z, self.b_z, 'numpy')
+            return sp.lambdify(self.z, self.model_data.b, 'numpy')
 
     # get_eps_z = tr.Property(depends_on='model_data_mapping_items')
     get_eps_z = tr.Property()
@@ -321,7 +318,7 @@ class MomentCurvature(tr.HasStrictTraits):
 if __name__ == '__main__':
     mc = MomentCurvature(idx=25, n_m=100)
 
-    if False:
+    if True:
         # If plot_norm is used, use the following:
         # mc.kappa_range = (0, mc.kappa_cr * 100, 100)
         mc.kappa_range = (-0.00002, 0.00002, 100)
@@ -332,7 +329,7 @@ if __name__ == '__main__':
         plt.show()
 
     # Test getting kappa by providing Moment values
-    if True:
+    if False:
         M_range = np.linspace(-40, 70, 100)
         kappa = mc.get_kappa(M_range * 1e+6)
         print(kappa)

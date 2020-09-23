@@ -28,6 +28,8 @@ from moment_curvature.moment_curvature_ import MomentCurvature, ModelData
 # ------------------------------------------------------------------
 
 def new_concise_way():
+    mc = MomentCurvature(idx=25, n_m=100)
+
     model_data = ModelData()
 
     # Material parameters [mm], [N/mm2]
@@ -40,12 +42,12 @@ def new_concise_way():
     model_data.eps_tu = 0.02
     model_data.mu = 0.33
 
-    # Defining a variable width b_z_ (T-section as an example) - if constant b is needed just set model_data.b value
+    # Defining a variable width b_z_ (T-section as an example)
     b_w = 50
     b_f = 500
     h_w = 0.85 * model_data.h
-    z = sp.Symbol('z')
-    b_z_ = sp.Piecewise((b_w, z < h_w), (b_f, z >= h_w))
+    b_z_ = sp.Piecewise((b_w, mc.mcs.z < h_w), (b_f, mc.mcs.z >= h_w))
+    model_data.b = b_z_
 
     # 2 layers reinforcement details
     model_data.A_j = np.array([250, 0])  # A_j[0] for tension steel / A_j[1] for compression steel
@@ -53,9 +55,6 @@ def new_concise_way():
     model_data.E_j = np.array([210000, 210000])
     model_data.eps_sy_j = np.array([0.002, 0.002])
 
-    # Creating MomentCurvature object
-    mc = MomentCurvature(idx=25, n_m=100)
-    mc.mcs.b_z = b_z_
     mc.model_data = model_data
 
     # If plot_norm is used, use the following:
@@ -117,7 +116,6 @@ def old_way_with_mobasher_paper_symbols():
     ''' Creating MomentCurvature object '''
 
     mc = MomentCurvature(idx=25, n_m=100)
-    mc.mcs.b_z = b_z_
 
     model_data = ModelData()
     model_data.h = h_
@@ -134,6 +132,8 @@ def old_way_with_mobasher_paper_symbols():
     model_data.A_j = A_j_
     model_data.E_j = E_j_
 
+    model_data.b = b_z_
+
     mc.model_data = model_data
 
     mc.kappa_range = (-0.00002, 0.00002, 100)
@@ -145,5 +145,5 @@ def old_way_with_mobasher_paper_symbols():
 
 
 if __name__ == '__main__':
-    # new_concise_way()
-    old_way_with_mobasher_paper_symbols()
+    new_concise_way()
+    # old_way_with_mobasher_paper_symbols()

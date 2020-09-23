@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from moment_curvature.moment_curvature_ import MomentCurvature, ModelData
 
 if __name__ == '__main__':
+    mc = MomentCurvature(idx=25, n_m=100)
     model_data = ModelData()
 
     # Material parameters [mm], [N/mm2]
@@ -16,23 +17,19 @@ if __name__ == '__main__':
     model_data.eps_tu = 0.02
     model_data.mu = 0.33
 
-    # Defining a variable width b_z_ (T-section as an example)
-    # (if constant b is needed just set model_data.b value)
-    b_w = 50
-    b_f = 500
-    h_w = 0.85 * model_data.h
-    z = sp.Symbol('z')
-    b_z_ = sp.Piecewise((b_w, z < h_w), (b_f, z >= h_w))
-
     # 2 layers reinforcement details
     model_data.A_j = np.array([250, 0])  # A_j[0] for tension steel / A_j[1] for compression steel
     model_data.z_j = np.array([0.1 * model_data.h, 0.9 * model_data.h])
     model_data.E_j = np.array([210000, 210000])
     model_data.eps_sy_j = np.array([0.002, 0.002])
 
-    # Creating MomentCurvature object
-    mc = MomentCurvature(idx=25, n_m=100)
-    mc.mcs.b_z = b_z_
+    # Defining a variable width (T-section as an example)
+    b_w = 50
+    b_f = 500
+    h_w = 0.85 * model_data.h
+    # Beam width b as a function of the height z (the sympy z symbol in MomentCurvatureSymbolic is used)
+    model_data.b = sp.Piecewise((b_w, mc.mcs.z < h_w), (b_f, mc.mcs.z >= h_w))
+
     mc.model_data = model_data
 
     # If plot_norm is used, use the following:
