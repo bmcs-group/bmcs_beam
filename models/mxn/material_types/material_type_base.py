@@ -7,15 +7,15 @@ Created on 26. 6. 2014
 import weakref
 import copy
 
-from mxn.constitutive_law import \
+from bmcs_beam.mxn.constitutive_law import \
     CLBase
-from mxn.mxn_tree_node import \
+from bmcs_beam.mxn.mxn_tree_node import \
     MxNTreeNode
 from traits.api import \
     Property, cached_property, Dict, Str, \
     on_trait_change, List, Button
 
-from mxn.matresdev.db.simdb import \
+from bmcs_beam.mxn.matresdev.db.simdb import \
     SimDBClass
 
 

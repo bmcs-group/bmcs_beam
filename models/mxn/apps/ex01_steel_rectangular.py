@@ -10,10 +10,10 @@ cross section with steel reinforcement
 from mxn import \
     CrossSection
 
-from mxn.matrix_cross_section import \
+from bmcs_beam.mxn.matrix_cross_section import \
     MatrixCrossSection, MCSGeoRect
 
-from mxn.reinf_layout import \
+from bmcs_beam.mxn.reinf_layout import \
     RLCBar
 
 from matplotlib.figure import \
@@ -22,7 +22,7 @@ from matplotlib.figure import \
 from matplotlib.backends.backend_agg import \
     FigureCanvasAgg
 
-from mxn.utils import \
+from bmcs_beam.mxn.utils import \
     get_outfile
 
 bar = RLCBar(x=0.1, z=0.05, material='bar_d10',

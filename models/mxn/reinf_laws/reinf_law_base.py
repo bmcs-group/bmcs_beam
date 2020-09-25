@@ -4,15 +4,15 @@ Created on Aug 23, 2012
 @author: rch
 '''
 
-from mxn.constitutive_law import CLBase
-from mxn.mxn_class_extension import \
+from bmcs_beam.mxn.constitutive_law import CLBase
+from bmcs_beam.mxn.mxn_class_extension import \
     MxNClassExt
-from mxn.mxn_tree_node import \
+from bmcs_beam.mxn.mxn_tree_node import \
     MxNLeafNode
 from traits.api import \
     List
 
-from mxn.matresdev.db.simdb import \
+from bmcs_beam.mxn.matresdev.db.simdb import \
     SimDBClass, SimDBClassExt
 
 

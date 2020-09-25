@@ -29,7 +29,7 @@ from etsproxy.pyface.api import ImageResource
 from ibvpy.mats.mats_explore import MATSExplore
 from ibvpy.mats.mats2D.mats2D_explore import MATS2DExplore
 from numpy import copy, array, hstack, loadtxt, savetxt
-from mxn.mfn import MFnLineArray
+from bmcs_beam.mxn.mfn import MFnLineArray
 
 from scipy.optimize import brentq, newton, fsolve, brenth
 from os.path import join
@@ -706,7 +706,7 @@ def run():
 
     from ibvpy.api import RTraceGraph, RTraceArraySnapshot
 
-    from mxn.mfn import MFnLineArray
+    from bmcs_beam.mxn.mfn import MFnLineArray
     from numpy import array, hstack
 
     from ibvpy.mats.mats2D.mats2D_explorer_bcond import BCDofProportional

@@ -34,7 +34,7 @@ from traitsui.table_column import \
 from util.traits.ui.item import \
     Item
 
-from mxn.mfn.mfn_line.mfn_line import \
+from bmcs_beam.mxn.mfn.mfn_line.mfn_line import \
     MFnLineArray
 
 from matplotlib.figure import \

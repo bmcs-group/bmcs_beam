@@ -26,25 +26,25 @@ As1 = 1.0 * (0.4 * 0.4) / (435 / 17) / 2 = 15.640e-4 m^2
 from mxn import \
     CrossSection, MxNDiagram
 
-from mxn.matrix_cross_section import \
+from bmcs_beam.mxn.matrix_cross_section import \
     MatrixCrossSection, MCSGeoRect
 
-from mxn.reinf_layout import \
+from bmcs_beam.mxn.reinf_layout import \
     RLCBar
 
-from mxn.matrix_laws import \
+from bmcs_beam.mxn.matrix_laws import \
     MatrixLawBlock
 
-from mxn.reinf_laws import \
+from bmcs_beam.mxn.reinf_laws import \
     ReinfLawSteel
 
-from mxn.material_types import \
+from bmcs_beam.mxn.material_types import \
     MTMatrixMixture, MTReinfBar
 
-from mxn.view import \
+from bmcs_beam.mxn.view import \
     MxNTreeView
 
-from mxn.use_cases import \
+from bmcs_beam.mxn.use_cases import \
     UseCaseContainer, UCParametricStudy
 
 if MTMatrixMixture.db.get('ex12_C30-37', None):

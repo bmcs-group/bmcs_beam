@@ -123,7 +123,7 @@ class KeyRef(TraitType):
 
 if __name__ == '__main__':
 
-    from mxn.reinf_laws import \
+    from bmcs_beam.mxn.reinf_laws import \
          ReinfLawBase, ReinfLawFBM
 
     class UseKeyRef(HasStrictTraits):

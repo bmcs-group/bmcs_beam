@@ -11,16 +11,16 @@ functionality to be used is the case when an instance of
 UseCaseContainer is passed as root - as shown in examples 07-10.
 '''
 
-from mxn.cross_section import \
+from bmcs_beam.mxn.cross_section import \
     CrossSection
 
-from mxn.view import \
+from bmcs_beam.mxn.view import \
     MxNTreeView
 
-from mxn.matrix_cross_section import \
+from bmcs_beam.mxn.matrix_cross_section import \
     MatrixCrossSection, MCSGeoRect
 
-from mxn.reinf_layout import \
+from bmcs_beam.mxn.reinf_layout import \
     RLCBar
 
 bar = RLCBar(x=0.1, z=0.05, material='bar_d10')

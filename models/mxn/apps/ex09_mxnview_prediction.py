@@ -6,10 +6,11 @@ Created on 2. 4. 2014
 Standard tree view with the default database node
 and added mxn_diagram node
 '''
+print('x12')
 
-from mxn.use_cases import \
+from bmcs_beam.mxn.use_cases import \
     UseCaseContainer
-from mxn.view import \
+from bmcs_beam.mxn.view import \
     MxNTreeView
 
 

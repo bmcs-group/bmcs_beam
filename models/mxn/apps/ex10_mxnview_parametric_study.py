@@ -7,9 +7,9 @@ Standard tree view with the default database node
 and added parametric study node
 '''
 
-from mxn.use_cases import \
+from bmcs_beam.mxn.use_cases import \
     UseCaseContainer, UCParametricStudy
-from mxn.view import \
+from bmcs_beam.mxn.view import \
     MxNTreeView
 
 

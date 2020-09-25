@@ -4,26 +4,26 @@ Created on 22. 4. 2014
 @author: Vancikv
 '''
 
-from mxn.cross_section import \
+from bmcs_beam.mxn.cross_section import \
     CrossSection
 
-from mxn.matrix_cross_section import \
+from bmcs_beam.mxn.matrix_cross_section import \
     MatrixCrossSection, MCSGeoRect
 
-from mxn.reinf_layout import \
+from bmcs_beam.mxn.reinf_layout import \
     RLCTexUniform
 
-from mxn.material_types import \
+from bmcs_beam.mxn.material_types import \
     MTReinfFabric
 
-from mxn.reinf_laws import \
+from bmcs_beam.mxn.reinf_laws import \
     ReinfLawFBM, ReinfLawLinear
 
 import numpy as np
 
 import pickle
 
-from mxn.utils import \
+from bmcs_beam.mxn.utils import \
     get_outfile
 
 if MTReinfFabric.db.get('fabric-test', None):

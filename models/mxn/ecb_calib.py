@@ -16,22 +16,22 @@ import numpy as np
 
 from scipy.optimize import fsolve
 
-from mxn.cross_section import \
+from bmcs_beam.mxn.cross_section import \
     CrossSection
 
-from mxn.reinf_layout import \
+from bmcs_beam.mxn.reinf_layout import \
     RLCTexUniform
 
-from mxn.reinf_laws import \
+from bmcs_beam.mxn.reinf_laws import \
     ReinfLawBase
 
-from mxn.matrix_cross_section import \
+from bmcs_beam.mxn.matrix_cross_section import \
     MatrixCrossSection, MCSGeoRect
 
 from .matresdev.db.simdb import SimDB
 simdb = SimDB()
 
-from mxn.mxn_tree_node import \
+from bmcs_beam.mxn.mxn_tree_node import \
     MxNTreeNode
 
 class ECBCalib(MxNTreeNode):

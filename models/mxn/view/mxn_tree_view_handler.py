@@ -17,7 +17,7 @@ from traitsui.file_dialog import \
 from traits.api import \
     Button, Instance, WeakRef
 
-from mxn.utils import \
+from bmcs_beam.mxn.utils import \
     get_outfile
 
 import pickle

@@ -14,10 +14,10 @@ from traits.api import \
 from mxn import \
     CrossSection
 
-from mxn.matrix_cross_section import \
+from bmcs_beam.mxn.matrix_cross_section import \
     MatrixCrossSection, MCSGeoRect
 
-from mxn.reinf_layout import \
+from bmcs_beam.mxn.reinf_layout import \
     RLCTexLayer
 
 from matplotlib.figure import \
@@ -26,7 +26,7 @@ from matplotlib.figure import \
 from matplotlib.backends.backend_agg import \
     FigureCanvasAgg
 
-from mxn.utils import \
+from bmcs_beam.mxn.utils import \
     get_outfile
 
 tl1 = RLCTexLayer(z_coord=0.1, material='default_fabric', material_law='fbm')

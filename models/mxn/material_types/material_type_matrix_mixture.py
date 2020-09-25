@@ -4,11 +4,11 @@ Created on Aug 23, 2012
 @author: rch
 '''
 
-from mxn.matrix_laws import \
+from bmcs_beam.mxn.matrix_laws import \
     MatrixLawBilinear, MatrixLawBlock, \
     MatrixLawLinear, MatrixLawQuad, \
     MatrixLawQuadratic, MatrixLawBase
-from mxn.mxn_class_extension import \
+from bmcs_beam.mxn.mxn_class_extension import \
     MxNClassExt
 from traits.api import \
     Property, cached_property, Dict, Str, \

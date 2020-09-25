@@ -11,10 +11,10 @@ from traits.api import \
     Event, on_trait_change, WeakRef, \
     Constant, cached_property, Bool
 
-from mxn.cross_section_state import \
+from bmcs_beam.mxn.cross_section_state import \
     CrossSectionState
 
-from mxn.mxn_tree_node import \
+from bmcs_beam.mxn.mxn_tree_node import \
     MxNTreeNode
 
 from .utils import \

@@ -1,22 +1,18 @@
 
 from traits.api import \
-    Array, Bool, Callable, Enum, Float, HasTraits, \
+    Array, Bool, Callable, Float, HasTraits, \
     Instance, Int, Trait, Str, Enum, Callable, List, TraitDict, Any, \
     Dict, Property, cached_property, WeakRef, Delegate, \
-    ToolbarButton, on_trait_change, Code, Expression, Button
+    ToolbarButton, on_trait_change, Expression, Button
     
 from traitsui.api import \
     Item, View, HGroup, ListEditor, VGroup, VSplit, Group, HSplit
 
-from etsproxy.traits.ui.menu import \
-    NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
-    MenuBar, Separator
-                                     
-from mxn.mfn.mfn_line.mfn_multiline import MFnMultiLine
-from mxn.mfn import MFnLineArray
-from mxn.mfn.mfn_line.mfn_matplotlib_multiline_editor import MFnMatplotlibEditor
-from mxn.mfn.mfn_line.mfn_chaco_multiline_editor import MFnChacoEditor
-from mxn.mfn.mfn_line.mfn_plot_adapter import MFnMultiPlotAdapter
+from bmcs_beam.mxn.mfn.mfn_line.mfn_multiline import MFnMultiLine
+from bmcs_beam.mxn.mfn import MFnLineArray
+from bmcs_beam.mxn.mfn.mfn_line.mfn_matplotlib_multiline_editor import MFnMatplotlibEditor
+from models.mxn.mfn.mfn_line.mfn_chaco_multiline_editor import MFnChacoEditor
+from bmcs_beam.mxn.mfn.mfn_line.mfn_plot_adapter import MFnMultiPlotAdapter
 from numpy import linspace, frompyfunc, vstack, column_stack
 from math import sin, cos
 

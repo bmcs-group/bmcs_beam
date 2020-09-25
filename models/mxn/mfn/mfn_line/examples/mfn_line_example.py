@@ -13,10 +13,10 @@ from traitsui.menu import \
     NoButtons, OKButton, CancelButton, Action, CloseAction, Menu, \
     MenuBar, Separator
 
-from mxn.mfn import MFnLineArray
-from mxn.mfn.mfn_line.mfn_chaco_editor import MFnChacoEditor
-from mxn.mfn.mfn_line.mfn_matplotlib_editor import MFnMatplotlibEditor
-from mxn.mfn.mfn_line.mfn_plot_adapter import MFnPlotAdapter
+from bmcs_beam.mxn.mfn import MFnLineArray
+from bmcs_beam.mxn.mfn.mfn_line.mfn_chaco_editor import MFnChacoEditor
+from bmcs_beam.mxn.mfn.mfn_line.mfn_matplotlib_editor import MFnMatplotlibEditor
+from bmcs_beam.mxn.mfn.mfn_line.mfn_plot_adapter import MFnPlotAdapter
 
 
 a = MFnPlotAdapter(max_size=(300, 200),

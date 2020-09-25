@@ -7,7 +7,7 @@ Created on 26. 2. 2014
 from traits.api import \
     Float, Property, cached_property, Array, Int, List
 
-from mxn.constitutive_law import CLBase
+from bmcs_beam.mxn.constitutive_law import CLBase
 
 import numpy as np
 

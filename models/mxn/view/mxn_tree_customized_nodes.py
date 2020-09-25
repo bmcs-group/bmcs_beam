@@ -18,24 +18,24 @@ from traitsui.api import \
 from traitsui.menu import \
     Menu
 
-from mxn.cross_section import \
+from bmcs_beam.mxn.cross_section import \
     CrossSection
-from mxn.ecb_calib import \
+from bmcs_beam.mxn.ecb_calib import \
     ECBCalib
-from mxn.material_types import \
+from bmcs_beam.mxn.material_types import \
     MaterialTypeBase
-from mxn.mxn_class_extension import \
+from bmcs_beam.mxn.mxn_class_extension import \
     MxNClassExt
-from mxn.mxn_diagram import \
+from bmcs_beam.mxn.mxn_diagram import \
     MxNDiagram
-from mxn.mxn_tree_node import \
+from bmcs_beam.mxn.mxn_tree_node import \
     ReinfLayoutTreeNode
-from mxn.reinf_layout import \
+from bmcs_beam.mxn.reinf_layout import \
     RLCTexLayer, RLCTexUniform, RLCBar
-from mxn.use_cases import \
+from bmcs_beam.mxn.use_cases import \
     UCDatabase, UCPStudyElementMxN, UCParametricStudy, \
     UseCaseContainer
-from mxn.utils import \
+from bmcs_beam.mxn.utils import \
     get_outfile
 from .mxn_tree_view_handler import \
     plot_self, new_material, del_material

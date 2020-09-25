@@ -7,10 +7,10 @@ Standard tree view with the default database node
 and added calibration node
 '''
 
-from mxn.view import \
+from bmcs_beam.mxn.view import \
     MxNTreeView
 
-from mxn.use_cases import \
+from bmcs_beam.mxn.use_cases import \
     UseCaseContainer
 
 ucc = UseCaseContainer()

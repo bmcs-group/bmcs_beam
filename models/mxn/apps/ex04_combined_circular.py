@@ -8,13 +8,13 @@ cross section with combined reinforcement of textile
 layers and steel bars
 '''
 
-from mxn.cross_section import \
+from bmcs_beam.mxn.cross_section import \
     CrossSection
 
-from mxn.matrix_cross_section import \
+from bmcs_beam.mxn.matrix_cross_section import \
     MatrixCrossSection, MCSGeoCirc
 
-from mxn.reinf_layout import \
+from bmcs_beam.mxn.reinf_layout import \
     RLCTexLayer, RLCBar
 
 from matplotlib.figure import \
@@ -23,7 +23,7 @@ from matplotlib.figure import \
 from matplotlib.backends.backend_agg import \
     FigureCanvasAgg
 
-from mxn.utils import \
+from bmcs_beam.mxn.utils import \
     get_outfile
 
 import numpy as np

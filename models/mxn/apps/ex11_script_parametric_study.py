@@ -10,10 +10,10 @@ to the tree view interface in creating a pstudy.
 from mxn import \
     CrossSection, MxNDiagram
 
-from mxn.matrix_cross_section import \
+from bmcs_beam.mxn.matrix_cross_section import \
     MatrixCrossSection, MCSGeoRect
 
-from mxn.reinf_layout import \
+from bmcs_beam.mxn.reinf_layout import \
     RLCTexUniform
 
 from matplotlib.figure import \
@@ -22,7 +22,7 @@ from matplotlib.figure import \
 from matplotlib.backends.backend_agg import \
     FigureCanvasAgg
 
-from mxn.utils import \
+from bmcs_beam.mxn.utils import \
     get_outfile
 
 ge = MCSGeoRect(height=0.06, width=0.14)

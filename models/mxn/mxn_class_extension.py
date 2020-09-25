@@ -10,13 +10,13 @@ from traits.api import \
 from .matresdev.db.simdb import \
     SimDBClassExt
 
-from mxn.mxn_tree_node import \
+from bmcs_beam.mxn.mxn_tree_node import \
     MxNTreeNode
 
 from traitsui.api import \
     View, Item, EnumEditor, Group
 
-from mxn.mxn_class_extension_handler import \
+from bmcs_beam.mxn.mxn_class_extension_handler import \
     MxNClassExtHandler
 
 class MxNClassExt(SimDBClassExt, MxNTreeNode):

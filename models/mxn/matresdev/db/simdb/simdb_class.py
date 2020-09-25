@@ -28,7 +28,7 @@ from traitsui.menu import Action, CloseAction, HelpAction, Menu, \
 from traitsui.table_column import \
     ObjectColumn
 
-from mxn.matresdev.db.simdb.simdb import simdb
+from bmcs_beam.mxn.matresdev.db.simdb.simdb import simdb
 from traitsui.tabular_adapter \
     import TabularAdapter
 from traitsui.tabular_adapter \

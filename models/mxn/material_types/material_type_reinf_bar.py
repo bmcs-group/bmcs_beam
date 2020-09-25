@@ -4,9 +4,9 @@ Created on 23. 4. 2014
 @author: Vancikv
 '''
 
-from mxn.mxn_class_extension import \
+from bmcs_beam.mxn.mxn_class_extension import \
     MxNClassExt
-from mxn.reinf_laws import \
+from bmcs_beam.mxn.reinf_laws import \
     ReinfLawBase, ReinfLawSteel
 from traits.api import \
     Property, cached_property, Dict, Str, \

@@ -9,15 +9,15 @@ from traits.api import \
     List, Str, Trait, Button
 from traitsui.api import \
     View, Item, UItem, VGroup, HGroup, spring
-from mxn.cross_section_component import \
+from bmcs_beam.mxn.cross_section_component import \
     CrossSectionComponent
-from mxn.material_types import \
+from bmcs_beam.mxn.material_types import \
     MTReinfBar, MTReinfFabric, MTMatrixMixture
-from mxn.mxn_diagram import \
+from bmcs_beam.mxn.mxn_diagram import \
     MxNDiagram
-from mxn.mxn_tree_node import \
+from bmcs_beam.mxn.mxn_tree_node import \
     MxNTreeNode
-from mxn.utils import \
+from bmcs_beam.mxn.utils import \
     KeyRef
 
 

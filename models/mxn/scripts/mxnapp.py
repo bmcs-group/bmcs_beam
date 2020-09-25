@@ -41,10 +41,10 @@ PyQT: http://www.riverbankcomputing.co.uk/software/pyqt/intro
 '''
                           )
 
-    from mxn.view import \
+    from bmcs_beam.mxn.view import \
         MxNTreeView
 
-    from mxn.use_cases import \
+    from bmcs_beam.mxn.use_cases import \
         UseCaseContainer, UCParametricStudy
 
     mxn_ps = UCParametricStudy()

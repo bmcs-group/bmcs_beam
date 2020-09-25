@@ -9,7 +9,7 @@ from traits.api import \
 
 import numpy as np
 
-from mxn.mfn import MFnLineArray
+from bmcs_beam.mxn.mfn import MFnLineArray
 
 import sympy as sp
 

@@ -16,7 +16,7 @@ inherit from the MxNTreeNode and supply the attributes
 
 from matplotlib.figure import \
     Figure
-from mxn.mxn_tree_node import \
+from bmcs_beam.mxn.mxn_tree_node import \
     MxNTreeNode, MxNLeafNode
 from traits.api import \
     HasStrictTraits, Instance, Button, Event
@@ -27,7 +27,7 @@ from traitsui.api import \
 from traitsui.menu import \
     Menu, MenuBar, Separator
 
-from mxn.utils.extra_traits.editors.mpl_figure_editor import \
+from bmcs_beam.mxn.utils.extra_traits.editors.mpl_figure_editor import \
     MPLFigureEditor
 from .mxn_tree_customized_nodes import \
     custom_node_list

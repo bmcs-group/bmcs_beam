@@ -4,19 +4,19 @@ Created on 26. 2. 2014
 @author: Vancikv
 '''
 
-from mxn.cross_section import \
+from bmcs_beam.mxn.cross_section import \
     CrossSection
 
-from mxn.ecb_calib import \
+from bmcs_beam.mxn.ecb_calib import \
     ECBCalib
 
-from mxn.mxn_diagram import \
+from bmcs_beam.mxn.mxn_diagram import \
     MxNDiagram
 
-from mxn.matrix_cross_section import \
+from bmcs_beam.mxn.matrix_cross_section import \
     MatrixCrossSection, MCSGeoRect
 
-from mxn.reinf_layout import \
+from bmcs_beam.mxn.reinf_layout import \
     RLCTexUniform
 
 import numpy as np
