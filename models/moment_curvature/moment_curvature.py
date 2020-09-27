@@ -3,9 +3,10 @@ import sympy as sp
 import traits.api as tr
 from scipy.optimize import root
 from bmcs_utils.api import \
-    InteractiveModel, mpl_align_xaxis, LambdifiedExpressions, InjectSymExpr
+    InteractiveModel, mpl_align_xaxis, \
+    SymbExpr, InjectSymbExpr
 
-class MomentCurvatureSymbolic(LambdifiedExpressions):
+class MomentCurvatureSymbolic(SymbExpr):
     """"This class handles all the symbolic calculations
     so that the class MomentCurvature doesn't use sympy ever
     """
@@ -75,10 +76,10 @@ class MomentCurvatureSymbolic(LambdifiedExpressions):
         ('sig_s_eps', ('eps', 'E_s', 'eps_sy')),
     ]
 
-class MomentCurvature(InteractiveModel,InjectSymExpr):
+class MomentCurvature(InteractiveModel,InjectSymbExpr):
     """Class returning the moment curvature relationship."""
 
-    inject_sym_class = MomentCurvatureSymbolic
+    symb_class = MomentCurvatureSymbolic
 
     # Geometry
     h = tr.Float(100, param=True, minmax=(1,3000), latex='h')
@@ -121,11 +122,11 @@ class MomentCurvature(InteractiveModel,InjectSymExpr):
 
     # Normal force
     def get_N_s_tj(self, kappa_t, eps_bot_t):
-        eps_z_tj = self.injected.get_eps_z(
+        eps_z_tj = self.symb.get_eps_z(
             kappa_t[:, np.newaxis], eps_bot_t[:, np.newaxis],
             self.z_j[np.newaxis, :]
         )
-        sig_s_tj = self.injected.get_sig_s_eps(
+        sig_s_tj = self.symb.get_sig_s_eps(
             eps_z_tj, self.E_j, self.eps_sy_j
         )
         N_s_tj = np.einsum('j,tj->tj', self.A_j, sig_s_tj)
@@ -133,8 +134,8 @@ class MomentCurvature(InteractiveModel,InjectSymExpr):
 
     def get_N_c_t(self, kappa_t, eps_bot_t):
         z_tm = self.z_m[np.newaxis, :]
-        b_z_m = self.injected.get_b_z(z_tm)
-        N_z_tm = b_z_m * self.injected.get_sig_c_z(
+        b_z_m = self.symb.get_b_z(z_tm)
+        N_z_tm = b_z_m * self.symb.get_sig_c_z(
             kappa_t[:, np.newaxis], eps_bot_t[:, np.newaxis], z_tm
         )
         return np.trapz(N_z_tm, x=z_tm, axis=-1)
@@ -167,11 +168,11 @@ class MomentCurvature(InteractiveModel,InjectSymExpr):
     M_s_t = tr.Property()
 
     def _get_M_s_t(self):
-        eps_z_tj = self.injected.get_eps_z(
+        eps_z_tj = self.symb.get_eps_z(
             self.kappa_t[:, np.newaxis], self.eps_bot_t[:, np.newaxis],
             self.z_j[np.newaxis, :]
         )
-        sig_z_tj = self.injected.get_sig_s_eps(
+        sig_z_tj = self.symb.get_sig_s_eps(
             eps_z_tj, self.E_j, self.eps_sy_j
         )
         return -np.einsum('j,tj,j->t', self.A_j, sig_z_tj, self.z_j)
@@ -180,8 +181,8 @@ class MomentCurvature(InteractiveModel,InjectSymExpr):
 
     def _get_M_c_t(self):
         z_tm = self.z_m[np.newaxis, :]
-        b_z_m = self.injected.get_b_z(z_tm)
-        N_z_tm = b_z_m * self.injected.get_sig_c_z(
+        b_z_m = self.symb.get_b_z(z_tm)
+        N_z_tm = b_z_m * self.symb.get_sig_c_z(
             self.kappa_t[:, np.newaxis], self.eps_bot_t[:, np.newaxis], z_tm
         )
         return -np.trapz(N_z_tm * z_tm, x=z_tm, axis=-1)
@@ -204,7 +205,7 @@ class MomentCurvature(InteractiveModel,InjectSymExpr):
     sig_tm = tr.Property()
 
     def _get_sig_tm(self):
-        return self.injected.get_sig_c_z(
+        return self.symb.get_sig_c_z(
             self.kappa_t[:, np.newaxis], self.eps_bot_t[:, np.newaxis],self.z_m[np.newaxis, :]
         )
 
