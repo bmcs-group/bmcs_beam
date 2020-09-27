@@ -3,6 +3,7 @@ import numpy as np
 import sympy as sp
 import traits.api as tr
 from scipy.optimize import root
+from bmcs_utils.api import InteractiveModel
 
 
 class ModelData(tr.HasStrictTraits):
@@ -137,7 +138,7 @@ class MomentCurvatureSymbolic(tr.HasStrictTraits):
         return sp.lambdify((self.eps, self.E_s, self.eps_sy), self.sig_s_eps, 'numpy')
 
 
-class MomentCurvature(tr.HasStrictTraits):
+class MomentCurvature(InteractiveModel):
     """Class returning the moment curvature relationship."""
 
     mcs = tr.Instance(MomentCurvatureSymbolic)
@@ -314,11 +315,16 @@ class MomentCurvature(tr.HasStrictTraits):
         axes[0].set_xlim(extrema[0][0], b_new_t)
         axes[1].set_xlim(t_new_b, extrema[1][1])
 
+    def subplots(self, fig):
+        return fig.subplots(1,2)
+
+    def update_plot(self, axes):
+        self.plot(*axes)
 
 if __name__ == '__main__':
     mc = MomentCurvature(idx=25, n_m=100)
-
-    if True:
+    print(mc.N_s_tj)
+    if False:
         # If plot_norm is used, use the following:
         # mc.kappa_range = (0, mc.kappa_cr * 100, 100)
         mc.kappa_range = (-0.00002, 0.00002, 100)
