@@ -1,3 +1,6 @@
+"""
+
+"""
 import numpy as np
 import sympy as sp
 import traits.api as tr
@@ -7,11 +10,21 @@ from bmcs_utils.api import \
     SymbExpr, InjectSymbExpr
 
 class MomentCurvatureSymbolic(SymbExpr):
-    """"This class handles all the symbolic calculations
+    """This class handles all the symbolic calculations
     so that the class MomentCurvature doesn't use sympy ever
     """
     #-------------------------------------------------------------------------
     # Symbolic derivation of expressions
+    #-------------------------------------------------------------------------
+    kappa = sp.Symbol('kappa', real=True)
+    eps_top = sp.symbols('varepsilon_top', real=True)
+    eps_bot = sp.symbols('varepsilon_bot', real=True)
+    b, h, z = sp.symbols('b, h, z', nonnegative=True)
+    eps_sy, E_s = sp.symbols('varepsilon_sy, E_s')
+    eps = sp.Symbol('varepsilon', real=True)
+
+    #-------------------------------------------------------------------------
+    # Model parameters
     #-------------------------------------------------------------------------
     E_ct, E_cc, eps_cr, eps_tu, mu = sp.symbols(
         r'E_ct, E_cc, varepsilon_cr, varepsilon_tu, mu', real=True,
@@ -21,13 +34,6 @@ class MomentCurvatureSymbolic(SymbExpr):
         r'varepsilon_cy, varepsilon_cu',
         real=True, nonpositive=True
     )
-
-    kappa = sp.Symbol('kappa', real=True)
-    eps_top = sp.symbols('varepsilon_top', real=True)
-    eps_bot = sp.symbols('varepsilon_bot', real=True)
-    b, h, z = sp.symbols('b, h, z', nonnegative=True)
-    eps_sy, E_s = sp.symbols('varepsilon_sy, E_s')
-    eps = sp.Symbol('varepsilon', real=True)
 
     #-------------------------------------------------------------------------
     # Symbolic derivation of expressions
@@ -68,16 +74,21 @@ class MomentCurvatureSymbolic(SymbExpr):
         else:
             return sp.lambdify(self.z, self.model.b, 'numpy')
 
-    model_params = ('E_ct','E_cc','eps_cr','eps_cy', 'eps_cu','mu','eps_tu')
+    #----------------------------------------------------------------
+    # SymbExpr protocol: Parameter names to be fetched from the model
+    #----------------------------------------------------------------
+    symb_model_params = ('E_ct','E_cc','eps_cr','eps_cy',
+                         'eps_cu','mu','eps_tu')
 
-    expressions = [
+    symb_expressions = [
         ('eps_z', ('kappa', 'eps_bot', 'z')),
         ('sig_c_z', ('kappa', 'eps_bot', 'z')),
         ('sig_s_eps', ('eps', 'E_s', 'eps_sy')),
     ]
 
 class MomentCurvature(InteractiveModel,InjectSymbExpr):
-    """Class returning the moment curvature relationship."""
+    """Class returning the moment curvature relationship.
+    """
 
     symb_class = MomentCurvatureSymbolic
 
@@ -86,9 +97,14 @@ class MomentCurvature(InteractiveModel,InjectSymbExpr):
     # Can be constant or sympy expression for the case of a varied b along height z
     b = tr.Float(50, param=True, minmax=(1,500), latex='b')
 
+    # @todo: simplify the definition of the ipywidget attributes
+    #
+
     # Concrete
     # @todo: Homam - this does not confirm with the PEP standard
-    E_ct = tr.Float(24000)            # E modulus of concrete on tension
+    E_ct = tr.Float(24000)
+    '''E modulus of concrete on tension'''
+
     E_cc = tr.Float(25000)            # E modulus of concrete on compression
     eps_cr = tr.Float(0.001)          # Concrete cracking strain
     eps_cy = tr.Float(-0.003)         # Concrete compressive yield strain
@@ -96,6 +112,9 @@ class MomentCurvature(InteractiveModel,InjectSymbExpr):
     eps_tu = tr.Float(0.003)          # Ultimate concrete tensile strain
     mu = tr.Float(0.33)               # Post crack tensile strength ratio (represents how much strength is left
                                       # after the crack because of short steel fibers in the mixture)
+
+    E_ct = tr.Float(24000,
+                    desc = "E modulus of concrete on tension")
 
     # Reinforcement
     z_j = tr.Array(np.float_, value=[10])                         # z positions of reinforcement layers
