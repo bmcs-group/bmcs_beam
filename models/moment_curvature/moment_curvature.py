@@ -6,7 +6,7 @@ import sympy as sp
 import traits.api as tr
 from scipy.optimize import root
 from bmcs_utils.api import \
-    InteractiveModel, mpl_align_xaxis, \
+    InteractiveModel, Item, View, mpl_align_xaxis, \
     SymbExpr, InjectSymbExpr
 
 class MomentCurvatureSymbolic(SymbExpr):
@@ -93,9 +93,13 @@ class MomentCurvature(InteractiveModel,InjectSymbExpr):
     symb_class = MomentCurvatureSymbolic
 
     # Geometry
-    h = tr.Float(100, param=True, minmax=(1,3000), latex='h')
+    h = tr.Float(100)
     # Can be constant or sympy expression for the case of a varied b along height z
-    b = tr.Float(50, param=True, minmax=(1,500), latex='b')
+    b = tr.Float(50)
+    ipw_view = View(
+        Item('h', param=True, minmax=(1,3000), latex='h'),
+        Item('b', param=True, minmax=(1,500), latex='b')
+    )
 
     # @todo: simplify the definition of the ipywidget attributes
     #
