@@ -1,8 +1,9 @@
 from beam_design.cross_section_layout import CrossSectionLayout
-from beam_design.cross_section_shape import CrossSectionShape
+from .cross_section_shape import CrossSectionShape
 from bmcs_utils.api import InteractiveModel, Item, View
 import traits.api as tr
 import numpy as np
+
 
 
 class BeamDesign(InteractiveModel):
@@ -11,8 +12,8 @@ class BeamDesign(InteractiveModel):
 
     name = 'BeamDesign'
 
-    L = tr.Int(5000)
-    h = tr.DelegatesTo('cross_section_shape')
+    L = tr.Float(5000)
+    H = tr.DelegatesTo('cross_section_shape')
 
     ipw_view = View(
         Item('L', latex='L \mathrm{[mm]}', minmax=(1000, 10000))
@@ -23,7 +24,7 @@ class BeamDesign(InteractiveModel):
 
     def update_plot(self, ax):
         beam_points_x_coords = [0, self.L, self.L, 0, 0]
-        beam_points_y_coords = [0, 0, self.h, self.h, 0]
+        beam_points_y_coords = [0, 0, self.H, self.H, 0]
         ax.fill(beam_points_x_coords, beam_points_y_coords, color='gray')
         ax.plot(beam_points_x_coords, beam_points_y_coords, color='black')
         ax.annotate('L = {} mm'.format(np.round(self.L), 0), xy=(self.L / 2, self.h * 1.1), color='black')

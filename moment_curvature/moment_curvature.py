@@ -4,7 +4,7 @@
 import numpy as np
 import sympy as sp
 import traits.api as tr
-from beam_design.beam_design import BeamDesign
+from bmcs_beam.beam_design.beam_design import BeamDesign
 from scipy.optimize import root
 from bmcs_utils.api import \
     InteractiveModel, Item, View, mpl_align_xaxis, \
@@ -66,10 +66,10 @@ class MomentCurvatureSymbolic(SymbExpr):
         (E_s * eps_sy, eps >= eps_sy)
     )
 
-    get_b_z = tr.Property
+    xget_b_z = tr.Property
 
     @tr.cached_property
-    def _get_get_b_z(self):
+    def _get_xget_b_z(self):
         # If b is a constant number return a lambda function that always returns a constant "b" value
         # otherwise return a function that returns b_z values for each given z
         if isinstance(self.model.b, int) or isinstance(self.model.b, float):
@@ -108,8 +108,8 @@ class MomentCurvature(InteractiveModel, InjectSymbExpr):
     reinforcement = tr.PrototypedFrom('cross_section_layout', 'reinforcement')
 
     # Geometry
-    h = tr.DelegatesTo('cross_section_shape')
-    b = tr.DelegatesTo('cross_section_shape')
+    H = tr.DelegatesTo('cross_section_shape')
+    # b = tr.DelegatesTo('cross_section_shape')
 
     # @todo: simplify the definition of the ipywidget attributes
 
@@ -134,7 +134,7 @@ class MomentCurvature(InteractiveModel, InjectSymbExpr):
 
     @tr.cached_property
     def _get_z_m(self):
-        return np.linspace(0, self.h, self.n_m)
+        return np.linspace(0, self.H, self.n_m)
 
     kappa_range = tr.Tuple(-0.001, 0.001, 101)
 
@@ -158,7 +158,7 @@ class MomentCurvature(InteractiveModel, InjectSymbExpr):
 
     def get_N_c_t(self, kappa_t, eps_bot_t):
         z_tm = self.z_m[np.newaxis, :]
-        b_z_m = self.symb.get_b_z(z_tm)
+        b_z_m = self.cross_section_shape.get_b(z_tm)
         N_z_tm = b_z_m * self.symb.get_sig_c_z(
             kappa_t[:, np.newaxis], eps_bot_t[:, np.newaxis], z_tm
         )
@@ -205,7 +205,7 @@ class MomentCurvature(InteractiveModel, InjectSymbExpr):
 
     def _get_M_c_t(self):
         z_tm = self.z_m[np.newaxis, :]
-        b_z_m = self.symb.get_b_z(z_tm)
+        b_z_m = self.cross_section_shape.get_b(z_tm)
         N_z_tm = b_z_m * self.symb.get_sig_c_z(
             self.kappa_t[:, np.newaxis], self.eps_bot_t[:, np.newaxis], z_tm
         )
@@ -239,7 +239,7 @@ class MomentCurvature(InteractiveModel, InjectSymbExpr):
 
     def _get_M_norm(self):
         # Section modulus @TODO optimize W for var b
-        W = (self.b * self.h ** 2) / 6
+        W = (self.b * self.H ** 2) / 6
         sig_cr = self.E_ct * self.eps_cr
         return W * sig_cr
 

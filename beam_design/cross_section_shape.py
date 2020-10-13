@@ -1,10 +1,11 @@
 import traits.api as tr
 from bmcs_utils.api import InteractiveModel
 import numpy as np
+import sympy as sp
 from bmcs_utils.models.interactive_window import View, Item
 
 
-class ICrossSectionShape(tr.Interface):
+class XICrossSectionShape(tr.Interface):
     """This interface lists the functions need to be implemented by cross section classes."""
 
     def get_cs_area(self):
@@ -14,27 +15,35 @@ class ICrossSectionShape(tr.Interface):
         """This function should return b values that correspond to the positions z_positions_array."""
 
 
-class CrossSectionShape(InteractiveModel):
+class CrossSectionShape(tr.HasTraits):
     """"This class describes the geometry of the cross section."""
-    h = tr.Float(600, minmax=(1, 1000))
-    b = tr.Float(250, minmax=(1, 1000)) # To be deleted later
-    # cross_section_type = tr.Enum([tr.Instance(Rectangle), ])
+    H = tr.Float(250)
+
+    def get_area(self):
+        '''Calculate the integral of b over the height'''
+
+    def get_b(self, z):
+        '''Width of the cross section must
+        be specified by the subclasses'''
+        raise NotImplementedError()
 
     def subplots(self, fig):
         return super().subplots(fig)
 
     def update_plot(self, ax):
-        pass
+        z = np.linspace(0,self.H,100)
+        b = self.get_b(z)
+        ax.axis([0, np.max(b), 0, self.H])
+        ax.axis('equal')
+        ax.fill(b, z, color='gray')
+        ax.plot(b, z, color='black')
 
-
-@tr.provides(ICrossSectionShape)
 class Rectangle(CrossSectionShape):
-    h = tr.Float(500)
-    b = tr.Float(250)
+    B = tr.Float(250)
 
     ipw_view = View(
-        Item('h', minmax=(1, 3000), latex='h'),
-        Item('b', minmax=(1, 500), latex='b')
+        Item('H', minmax=(1, 3000), latex='h'),
+        Item('B', minmax=(1, 500), latex='b')
     )
 
     def get_cs_area(self):
@@ -46,16 +55,15 @@ class Rectangle(CrossSectionShape):
     def subplots(self, fig):
         return super().subplots(fig)
 
-    def update_plot(self, ax):
-        ax.axis([0, self.b, 0, self.h])
+    def xupdate_plot(self, ax):
+        ax.axis([0, self.B, 0, self.h])
         ax.axis('equal')
-        ax.fill([0, self.b, self.b, 0, 0], [0, 0, self.h, self.h, 0], color='gray')
-        ax.plot([0, self.b, self.b, 0, 0], [0, 0, self.h, self.h, 0], color='black')
+        ax.fill([0, self.B, self.B, 0, 0], [0, 0, self.H, self.H, 0], color='gray')
+        ax.plot([0, self.B, self.B, 0, 0], [0, 0, self.H, self.H, 0], color='black')
 
 
-@tr.provides(ICrossSectionShape)
 class Circle(CrossSectionShape):
-    r = tr.Float(100, param=True, minmax=(1, 1000), auto_set=False, enter_set=True)
+    R = tr.Float(100, param=True, minmax=(1, 1000), auto_set=False, enter_set=True)
 
     def get_cs_area(self):
         pass
@@ -69,12 +77,30 @@ class Circle(CrossSectionShape):
     def update_plot(self, ax):
         pass
 
+class TShape(CrossSectionShape):
+    name = 'T-shape'
 
-@tr.provides(ICrossSectionShape)
+    H = tr.Float(250, input=True)
+    B_f = tr.Float(250, input=True)
+    B_w = tr.Float(100, input=True)
+    H_w = tr.Float(100, input=True)
+
+    def get_cs_area(self):
+        pass
+
+    get_b = tr.Property(tr.Callable, depends_on='+input')
+    @tr.cached_property
+    def _get_get_b(self):
+        z_ = sp.Symbol('z')
+        b_p = sp.Piecewise(
+            (self.B_w, z_ < self.H_w),
+            (self.B_f, True)
+        )
+        return sp.lambdify(z_, b_p, 'numpy')
+
 class CustomShape(CrossSectionShape):
-    h = tr.Float(100, param=True, minmax=(1, 1000), auto_set=False, enter_set=True)
     # The width b can be a sympy expression describing a variable B along the height
-    b = tr.Any(100, param=True, minmax=(1, 1000), auto_set=False, enter_set=True)
+    # b = tr.Any(100, param=True, minmax=(1, 1000), auto_set=False, enter_set=True)
 
     def get_cs_area(self):
         pass
