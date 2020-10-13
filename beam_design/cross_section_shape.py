@@ -31,7 +31,7 @@ class CrossSectionShape(tr.HasTraits):
         return super().subplots(fig)
 
     def update_plot(self, ax):
-        z = np.linspace(0,self.H,100)
+        z = np.linspace(0, self.H, 100)
         b = self.get_b(z)
         ax.axis([0, np.max(b), 0, self.H])
         ax.axis('equal')
