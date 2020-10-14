@@ -1,5 +1,5 @@
-from .cross_section_layout import CrossSectionLayout
-from .cross_section_shape import Rectangle, ICrossSectionShape
+from bmcs_beam.beam_design.cross_section_layout import CrossSectionLayout
+from bmcs_beam.beam_design.cross_section_shape import Rectangle, ICrossSectionShape
 from bmcs_utils.api import InteractiveModel, Item, View
 import traits.api as tr
 import numpy as np

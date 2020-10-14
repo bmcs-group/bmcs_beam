@@ -1,5 +1,3 @@
-# from .beam_design import BeamDesign
-from beam_design.beam_design import BeamDesign
 
 from .cross_section_shape import CrossSectionShapeBase
 from bmcs_utils.api import InteractiveModel, Item, View
@@ -92,12 +90,12 @@ class CrossSectionLayout(InteractiveModel):
     reinforcement = tr.Instance(Reinforcement, ())
 
     beam_design = tr.WeakRef
-    cross_section_shape = tr.DelegatesTo('beam_design')
+#    cross_section_shape = tr.DelegatesTo('beam_design')
 
     # def _cross_section_shape_default(self):
     #     return self.beam_design.cross_section_shape
 
-    H = tr.DelegatesTo('cross_section_shape')
+#    H = tr.DelegatesTo('cross_section_shape')
 
     # TODO: what params need to show here? is there any?
     ipw_view = View(
@@ -105,7 +103,8 @@ class CrossSectionLayout(InteractiveModel):
 
     def get_comp_E(self):
         # todo: check it with the bmcs example
-        A_composite = self.b * self.H
+        H = self.beam_design.cross_section_shape.H
+        A_composite = self.b * H
         n_rovings = self.width / self.spacing  # width or B??
         A_layer = n_rovings * self.A_roving
         A_carbon = self.n_layers * A_layer
@@ -118,7 +117,7 @@ class CrossSectionLayout(InteractiveModel):
 
     # TODO: what should be plotted here? cross section with steel positions?
     def update_plot(self, ax):
-        self.cross_section_shape.update_plot(ax)
+        self.beam_design.cross_section_shape.update_plot(ax)
 
         # Quick fix with constant b
         # b_ = 100
