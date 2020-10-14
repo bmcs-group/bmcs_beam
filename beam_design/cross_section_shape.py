@@ -3,9 +3,12 @@ from bmcs_utils.api import InteractiveModel
 import numpy as np
 import sympy as sp
 from bmcs_utils.models.interactive_window import View, Item
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Polygon
 
 
-class XICrossSectionShape(tr.Interface):
+# TODO: decide whether to use this or just remove it, (maybe delete)
+class ICrossSectionShape(tr.Interface):
     """This interface lists the functions need to be implemented by cross section classes."""
 
     def get_cs_area(self):
@@ -15,80 +18,96 @@ class XICrossSectionShape(tr.Interface):
         """This function should return b values that correspond to the positions z_positions_array."""
 
 
-class CrossSectionShape(tr.HasTraits):
+class CrossSectionShapeBase(InteractiveModel):
+    # TODO: handle the initialization of this base class because it doesn't have b to draw the cross section
+    name = 'Cross section shape'
+
     """"This class describes the geometry of the cross section."""
     H = tr.Float(250)
 
+    ipw_view = View(
+        Item('H', minmax=(10, 3000), latex='H [mm]')
+    )
+
     def get_area(self):
-        '''Calculate the integral of b over the height'''
+        """Calculate the integral of b over the height"""
+        return self.get_cs_area()
 
     def get_b(self, z):
-        '''Width of the cross section must
-        be specified by the subclasses'''
+        """Width of the cross section must be specified by the subclasses"""
         raise NotImplementedError()
 
     def subplots(self, fig):
-        return super().subplots(fig)
+        return fig.subplots(1, 1)
 
+    # TODO: decide on this update_plot if it will be done in subclasses for efficiency or here as a brief implementation
     def update_plot(self, ax):
-        z = np.linspace(0, self.H, 100)
-        b = self.get_b(z)
-        ax.axis([0, np.max(b), 0, self.H])
-        ax.axis('equal')
-        ax.fill(b, z, color='gray')
-        ax.plot(b, z, color='black')
+        raise NotImplementedError()
 
-class Rectangle(CrossSectionShape):
+
+@tr.provides(ICrossSectionShape)
+class Rectangle(CrossSectionShapeBase):
     B = tr.Float(250)
 
     ipw_view = View(
-        Item('H', minmax=(1, 3000), latex='h'),
-        Item('B', minmax=(1, 500), latex='b')
+        *CrossSectionShapeBase.ipw_view.content,        # this will add View Items of the base class CrossSectionShapeBase
+        Item('B', minmax=(10, 500), latex='B [mm]')
     )
 
     def get_cs_area(self):
-        return self.b * self.h
+        return self.B * self.H
 
     def get_b(self, z_positions_array):
-        return np.full_like(z_positions_array, self.b)
+        return np.full_like(z_positions_array, self.B)
 
-    def subplots(self, fig):
-        return super().subplots(fig)
-
-    def xupdate_plot(self, ax):
-        ax.axis([0, self.B, 0, self.h])
+    def update_plot(self, ax):
         ax.axis('equal')
         ax.fill([0, self.B, self.B, 0, 0], [0, 0, self.H, self.H, 0], color='gray')
         ax.plot([0, self.B, self.B, 0, 0], [0, 0, self.H, self.H, 0], color='black')
 
 
-class Circle(CrossSectionShape):
-    R = tr.Float(100, param=True, minmax=(1, 1000), auto_set=False, enter_set=True)
+@tr.provides(ICrossSectionShape)
+class Circle(CrossSectionShapeBase):
+    # TODO->Rostia: provide input field instead minmax range
+    # H from the base class is used as the R
+
+    ipw_view = View(
+        Item('H', minmax=(10, 3000), latex='R [mm]'),
+    )
 
     def get_cs_area(self):
-        pass
+        return np.pi * self.H * self.H
 
     def get_b(self, z_positions_array):
+        # TODO->Saeed: complete this
         pass
-
-    def subplots(self, fig):
-        return super().subplots(fig)
 
     def update_plot(self, ax):
-        pass
+        # TODO->Saeed: fix this
+        ax.axis('equal')
+        ax.Circle((0, 0), self.R, color='gray', linewidth=4, fill=True)
 
-class TShape(CrossSectionShape):
+
+@tr.provides(ICrossSectionShape)
+class TShape(CrossSectionShapeBase):
     name = 'T-shape'
 
-    H = tr.Float(250, input=True)
     B_f = tr.Float(250, input=True)
     B_w = tr.Float(100, input=True)
     H_w = tr.Float(100, input=True)
 
+    ipw_view = View(
+        *CrossSectionShapeBase.ipw_view.content,
+        Item('B_f', minmax=(10, 3000), latex='B_f [mm]'),
+        Item('B_w', minmax=(10, 3000), latex='B_w [mm]'),
+        Item('H_w', minmax=(10, 3000), latex='H_w [mm]'),
+    )
+
     def get_cs_area(self):
-        pass
+        return self.B_w * self.H_w + self.B_f * (self.H - self.H_w)
 
     get_b = tr.Property(tr.Callable, depends_on='+input')
+
     @tr.cached_property
     def _get_get_b(self):
         z_ = sp.Symbol('z')
@@ -98,9 +117,26 @@ class TShape(CrossSectionShape):
         )
         return sp.lambdify(z_, b_p, 'numpy')
 
-class CustomShape(CrossSectionShape):
-    # The width b can be a sympy expression describing a variable B along the height
-    # b = tr.Any(100, param=True, minmax=(1, 1000), auto_set=False, enter_set=True)
+    def update_plot(self, ax):
+        # TODO->Saeed: fix this
+        # Start drawing from bottom center of the cross section
+        cs_points = np.array([  [self.B_w/2, 0],
+                                [self.B_w/2, self.H_w],
+                                [self.B_f/2, self.H_w],
+                                [self.B_f/2, self.H],
+                                [-self.B_f/2, self.H],
+                                [-self.B_f/2, self.H_w],
+                                [-self.B_w/2, self.H_w],
+                                [-self.B_w/2, 0]])
+        cs = Polygon(cs_points, True)
+        patch_collection = PatchCollection([cs])
+
+        ax.add_collection(patch_collection)
+
+
+# TODO->Saeed: maybe complete this
+@tr.provides(ICrossSectionShape)
+class CustomShape(CrossSectionShapeBase):
 
     def get_cs_area(self):
         pass
@@ -108,15 +144,19 @@ class CustomShape(CrossSectionShape):
     def get_b(self, z_positions_array):
         pass
 
-    def subplots(self, fig):
-        return super().subplots(fig)
-
     def update_plot(self, ax):
-        pass
+        # TODO->Saeed: fix this to use it for the CustomShape
+        # self.update_plot(ax)
+        z = np.linspace(0, self.H, 100)
+        b = self.get_b(z)
+        ax.axis([0, np.max(b), 0, self.H])
+        ax.axis('equal')
+        ax.fill(b, z, color='gray')
+        ax.plot(b, z, color='black')
 
 
 if __name__ == '__main__':
-    cs = CrossSectionShape()
+    cs = CrossSectionShapeBase()
 
     tv = cs.trait_view('ipw_view')
-    print(tv.content.content)
+    cs.configure_traits()

@@ -1,13 +1,20 @@
 from .cross_section_layout import CrossSectionLayout
-from .cross_section_shape import CrossSectionShape
+from .cross_section_shape import Rectangle, ICrossSectionShape
 from bmcs_utils.api import InteractiveModel, Item, View
 import traits.api as tr
 import numpy as np
 
 
 class BeamDesign(InteractiveModel):
-    cross_section_layout = tr.Instance(CrossSectionLayout, ())
-    cross_section_shape = tr.Instance(CrossSectionShape, ())
+    cross_section_layout = tr.Instance(CrossSectionLayout)
+
+    def _cross_section_layout_default(self):
+        return CrossSectionLayout(beam_design=self)
+
+    cross_section_shape = tr.Instance(ICrossSectionShape)
+
+    def _cross_section_shape_default(self):
+        return Rectangle()
 
     name = 'BeamDesign'
 
