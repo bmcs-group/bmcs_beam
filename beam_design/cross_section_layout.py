@@ -1,10 +1,13 @@
-from .cross_section_shape import CrossSectionShape
-from bmcs_utils.api import InteractiveModel, Item, View
-import traits.api as tr
 import numpy as np
+import traits.api as tr
+from bmcs_utils.api import InteractiveModel, Item, View
 
 
 class Reinforcement(InteractiveModel):
+    name = 'Reinforcement'
+
+    # TODO->Saeed: prepare the varibles for InteractiveModel (ipw_view and so on...)
+
     z_j = tr.Array(np.float_, value=[50])
     """z positions of reinforcement layers"""
 
@@ -43,6 +46,14 @@ class Bar(Reinforcement):
 
 
 class Matrix(InteractiveModel):
+    name = 'Matrix'
+
+    ipw_view = View(
+        Item('E_ct', minmax=(10, 50000), latex='E_{ct} [N/mm^2]'),
+        Item('E_cc', minmax=(10, 50000), latex='E_{cc} [N/mm^2]')
+        # TODO->Saeed: complete these
+    )
+
     E_ct = tr.Float(24000)
     """E modulus of matrix on tension"""
 
@@ -65,33 +76,24 @@ class Matrix(InteractiveModel):
     """Post crack tensile strength ratio (represents how much strength is left after the crack because of short steel 
     fibers in the mixture)"""
 
+    def update_plot(self, axes):
+        pass
+
 
 class CrossSectionLayout(InteractiveModel):
     name = 'CrossSectionLayout'
 
-    cross_section_shape = tr.Instance(CrossSectionShape, ())
-
     matrix = tr.Instance(Matrix, ())
     reinforcement = tr.Instance(Reinforcement, ())
 
-    # Reinforcement
-    E_carbon = tr.Int(200000)
-
-    # Concerte cross section
-    #     L = tr.Int(5000, param=True, latex='L \mathrm{mm}', minmax=(10,10000))
-    H = tr.DelegatesTo('cross_section_shape')
-    E_con = tr.Int(14000)
-    n_x = tr.Int(100)
+    beam_design = tr.WeakRef
 
     ipw_view = View(
-        Item('E_carbon', param=True, latex='E_r \mathrm{[MPa]}', minmax=(200000, 300000)),
-        Item('E_con', param=True, latex='E \mathrm{[MPa]}', minmax=(14000, 41000)),
-        Item('n_x', param=True, latex='n_x \mathrm{[-]}', minmax=(1, 1000))
     )
 
     def get_comp_E(self):
-        '''todo: check it with the bmcs example'''
-        A_composite = self.b * self.H
+        H = self.beam_design.cross_section_shape.H
+        A_composite = self.b * H
         n_rovings = self.width / self.spacing  # width or B??
         A_layer = n_rovings * self.A_roving
         A_carbon = self.n_layers * A_layer
@@ -103,16 +105,17 @@ class CrossSectionLayout(InteractiveModel):
         return fig.subplots(1, 1)
 
     def update_plot(self, ax):
-        b_ = 100
-        ax.axis([0, 100, 0, self.H])
-        ax.axis('equal')
-        ax.fill([0, b_, b_, 0, 0], [0, 0, self.H, self.H, 0], color='gray')
-        ax.plot([0, b_, b_, 0, 0], [0, 0, self.H, self.H, 0], color='black')
+        self.beam_design.cross_section_shape.update_plot(ax)
 
-        # ax.axis([0, self.b, 0, self.H])
-        # ax.axis('equal')
-        # ax.fill([0, self.b, self.b, 0, 0], [0, 0, self.H, self.H, 0], color='gray')
-        # ax.plot([0, self.b, self.b, 0, 0], [0, 0, self.H, self.H, 0], color='black')
+        # TODO->Saeed: the previous line will plot a cross section, please add the steel to it just as red strips in z_j locations
+        #  and with a width that is relative to A_j (get z_j and A_j values from 'reinforcement' class variable)
+        #  (just fix, generalize and improve the following)
+        H = self.beam_design.cross_section_shape.H
+        max_B = np.max(self.beam_design.cross_section_shape.get_b(np.linspace(0, 100, H)))
+        z1 = self.reinforcement.z_j[0]
+        ax.plot([0, max_B], [z1, z1], color='r', linewidth=5)
+
+
         # ax.plot([self.b / 2 - self.width / 2, self.b / 2 + self.width / 2], [self.f_h, self.f_h], color='Blue',
         #         linewidth=self.n_layers * self.thickness)
         # ax.annotate('E_composite = {} GPa'.format(np.round(self.get_comp_E() / 1000), 0),
