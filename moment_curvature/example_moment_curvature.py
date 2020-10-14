@@ -17,6 +17,7 @@ def run_example_with_default_params():
 
 
 def run_example_with_t_section_and_custom_params():
+    # TODO->Homam: debug MomentCurvature for t-section results
 
     H = 666
     # Defining a variable width (T-section as an example)

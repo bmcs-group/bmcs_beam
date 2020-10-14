@@ -21,7 +21,9 @@ class MomentCurvature(tr.HasTraits):
     # Use PrototypedFrom only when the prototyped object is a class (The prototyped attribute behaves similarly
     # to a delegated attribute, until it is explicitly changed; from that point forward, the prototyped attribute
     # changes independently from its prototype.)
-    test = tr.PrototypedFrom('beam_design', 'test')
+    # test = tr.PrototypedFrom('beam_design', 'test')
+    test = tr.DelegatesTo('beam_design')
+
     test_first = tr.PrototypedFrom('test', 'test_first')
 
     # def _test_default(self):
@@ -33,13 +35,13 @@ class MomentCurvature(tr.HasTraits):
 
 
 if __name__ == '__main__':
-    # test = Test(test_var='test1')
-    # bd = BeamDesign(name='asdasd', test=test)
-    # mc = MomentCurvature(beam_design = bd)
-    # print(mc.test_var)
+    test = Test(test_var='test1')
+    bd = BeamDesign(name='asdasd', test=test)
+    mc = MomentCurvature(beam_design = bd)
+    print(mc.test.test_var)
     # print(mc.name)
     # print(mc.test_first_var)
 
-    mc = MomentCurvature(bbb=25)
-
-    print(mc.bbb)
+    # mc = MomentCurvature(bbb=25)
+    #
+    # print(mc.bbb)

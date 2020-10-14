@@ -111,8 +111,6 @@ class MomentCurvature(InteractiveModel, InjectSymbExpr):
     H = tr.DelegatesTo('cross_section_shape')
     # b = tr.DelegatesTo('cross_section_shape')
 
-    # @todo: simplify the definition of the ipywidget attributes
-
     # Concrete
     E_ct = tr.DelegatesTo('matrix')
     E_cc = tr.DelegatesTo('matrix')
