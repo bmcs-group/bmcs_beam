@@ -1,8 +1,6 @@
-
-from .cross_section_shape import CrossSectionShapeBase
-from bmcs_utils.api import InteractiveModel, Item, View
-import traits.api as tr
 import numpy as np
+import traits.api as tr
+from bmcs_utils.api import InteractiveModel, Item, View
 
 
 class Reinforcement(InteractiveModel):
@@ -78,7 +76,6 @@ class Matrix(InteractiveModel):
     """Post crack tensile strength ratio (represents how much strength is left after the crack because of short steel 
     fibers in the mixture)"""
 
-    # TODO: what if I don't want to plot anything, just change params? is this a good approach?
     def update_plot(self, axes):
         pass
 
@@ -90,19 +87,11 @@ class CrossSectionLayout(InteractiveModel):
     reinforcement = tr.Instance(Reinforcement, ())
 
     beam_design = tr.WeakRef
-#    cross_section_shape = tr.DelegatesTo('beam_design')
 
-    # def _cross_section_shape_default(self):
-    #     return self.beam_design.cross_section_shape
-
-#    H = tr.DelegatesTo('cross_section_shape')
-
-    # TODO: what params need to show here? is there any?
     ipw_view = View(
     )
 
     def get_comp_E(self):
-        # todo: check it with the bmcs example
         H = self.beam_design.cross_section_shape.H
         A_composite = self.b * H
         n_rovings = self.width / self.spacing  # width or B??
@@ -115,22 +104,18 @@ class CrossSectionLayout(InteractiveModel):
     def subplots(self, fig):
         return fig.subplots(1, 1)
 
-    # TODO: what should be plotted here? cross section with steel positions?
     def update_plot(self, ax):
         self.beam_design.cross_section_shape.update_plot(ax)
 
-        # Quick fix with constant b
-        # b_ = 100
-        # ax.axis([0, 100, 0, self.H])
-        # ax.axis('equal')
-        # ax.fill([0, b_, b_, 0, 0], [0, 0, self.H, self.H, 0], color='gray')
-        # ax.plot([0, b_, b_, 0, 0], [0, 0, self.H, self.H, 0], color='black')
+        # TODO->Saeed: the previous line will plot a cross section, please add the steel to it just as red strips in z_j locations
+        #  and with a width that is relative to A_j (get z_j and A_j values from 'reinforcement' class variable)
+        #  (just fix, generalize and improve the following)
+        H = self.beam_design.cross_section_shape.H
+        max_B = np.max(self.beam_design.cross_section_shape.get_b(np.linspace(0, 100, H)))
+        z1 = self.reinforcement.z_j[0]
+        ax.plot([0, max_B], [z1, z1], color='r', linewidth=5)
 
-        # Original from notebook
-        # ax.axis([0, self.b, 0, self.H])
-        # ax.axis('equal')
-        # ax.fill([0, self.b, self.b, 0, 0], [0, 0, self.H, self.H, 0], color='gray')
-        # ax.plot([0, self.b, self.b, 0, 0], [0, 0, self.H, self.H, 0], color='black')
+
         # ax.plot([self.b / 2 - self.width / 2, self.b / 2 + self.width / 2], [self.f_h, self.f_h], color='Blue',
         #         linewidth=self.n_layers * self.thickness)
         # ax.annotate('E_composite = {} GPa'.format(np.round(self.get_comp_E() / 1000), 0),

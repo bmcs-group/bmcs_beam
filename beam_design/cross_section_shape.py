@@ -7,42 +7,25 @@ from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon
 
 
-# TODO: decide whether to use this or just remove it, (maybe delete)
 class ICrossSectionShape(tr.Interface):
     """This interface lists the functions need to be implemented by cross section classes."""
 
     def get_cs_area(self):
-        """This function should return the area of the cross section."""
+        """Returns the area of the cross section."""
 
     def get_b(self, z_positions_array):
-        """This function should return b values that correspond to the positions z_positions_array."""
+        """Returns b values that correspond to the positions z_positions_array."""
 
 
 class CrossSectionShapeBase(InteractiveModel):
-    # TODO: handle the initialization of this base class because it doesn't have b to draw the cross section
+    """"This class describes the geometry of the cross section."""
     name = 'Cross section shape'
 
-    """"This class describes the geometry of the cross section."""
-    H = tr.Float(250)
+    H = tr.Float(600)
 
     ipw_view = View(
         Item('H', minmax=(10, 3000), latex='H [mm]')
     )
-
-    def get_area(self):
-        """Calculate the integral of b over the height"""
-        return self.get_cs_area()
-
-    def get_b(self, z):
-        """Width of the cross section must be specified by the subclasses"""
-        raise NotImplementedError()
-
-    def subplots(self, fig):
-        return fig.subplots(1, 1)
-
-    # TODO: decide on this update_plot if it will be done in subclasses for efficiency or here as a brief implementation
-    def update_plot(self, ax):
-        raise NotImplementedError()
 
 
 @tr.provides(ICrossSectionShape)
@@ -153,10 +136,3 @@ class CustomShape(CrossSectionShapeBase):
         ax.axis('equal')
         ax.fill(b, z, color='gray')
         ax.plot(b, z, color='black')
-
-
-if __name__ == '__main__':
-    cs = CrossSectionShapeBase()
-
-    tv = cs.trait_view('ipw_view')
-    cs.configure_traits()
