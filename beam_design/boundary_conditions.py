@@ -1,4 +1,8 @@
 from bmcs_utils.api import InteractiveModel, Item, View
+from matplotlib.path import Path
+import matplotlib.patches as mpatches
+from matplotlib.patches import PathPatch
+import ipywidgets as widgets
 import traits.api as tr
 import numpy as np
 import sympy as sp
@@ -25,19 +29,19 @@ class BoundaryConditions(InteractiveModel):
 
     L = tr.Int(5000, param=True, latex='L \mathrm{[mm]}', minmax=(1000, 10000))
     H = tr.Int(200, param=True, latex='H \mathrm{[mm]}', minmax=(10, 500))
-    F = tr.Float(1000)
+    f = tr.Float(1000) #TODO solve the issue of l/L and f/F
     n_sup = tr.Int(2)
     G_adj = tr.Float(0.02)
     F_pos = tr.Int(2500)
 
     ipw_view = View(
-        Item('F', param=True, latex='F \mathrm{[N]}', minmax=(1000, 10000)),
+        Item('f', param=True, latex='F \mathrm{[N]}', minmax=(1000, 10000)), # the name might be confusing
         Item('n_sup', param=True, latex='n_{sup} \mathrm{[-]}', minmax=(2, 10)),  # number of supports
         Item('G_adj', param=True, latex='G_{adj} \mathrm{[-]}', minmax=(1e-3, 1e-1)),  # Graphic adjustment factor
         Item('F_pos', param=True, latex='F_{pos} \mathrm{[mm]}', minmax=(0, 10000)),  # Force position
     )
 
-    def supports_location(self):
+    def get_supports_loc(self):
 
         # reading the position of the boundary conditions
         loc_d_ = []
@@ -71,27 +75,27 @@ class BoundaryConditions(InteractiveModel):
         vertices = []
         codes = []
 
-        for i in range(0, len((self.supports_location()[0]))):
+        for i in range(0, len((self.get_supports_loc()[0]))):
 
             codes += [Path.MOVETO] + [Path.LINETO] * 2 + [Path.CLOSEPOLY]
-            vertices += [(self.supports_location()[0][i] - self.L * (self.G_adj), -self.L * self.G_adj),
-                         (self.supports_location()[0][i], 0),
-                         (self.supports_location()[0][i] + self.L * (self.G_adj), -self.L * self.G_adj),
-                         (self.supports_location()[0][i] - self.L * (self.G_adj), -self.L * self.G_adj)]
+            vertices += [(self.get_supports_loc()[0][i] - self.L * (self.G_adj), -self.L * self.G_adj),
+                         (self.get_supports_loc()[0][i], 0),
+                         (self.get_supports_loc()[0][i] + self.L * (self.G_adj), -self.L * self.G_adj),
+                         (self.get_supports_loc()[0][i] - self.L * (self.G_adj), -self.L * self.G_adj)]
 
-            if self.supports_location()[0][i] != 0:
+            if self.get_supports_loc()[0][i] != 0:
                 codes += [Path.MOVETO] + [Path.LINETO] + [Path.CLOSEPOLY]
-                vertices += [(self.supports_location()[0][i] + (self.L * self.G_adj), -self.L * self.G_adj * 1.2),
-                             (self.supports_location()[0][i] - (self.L * self.G_adj), -self.L * self.G_adj * 1.2),
-                             (self.supports_location()[0][i] - (self.L * self.G_adj), -self.L * self.G_adj * 1.2)]
+                vertices += [(self.get_supports_loc()[0][i] + (self.L * self.G_adj), -self.L * self.G_adj * 1.2),
+                             (self.get_supports_loc()[0][i] - (self.L * self.G_adj), -self.L * self.G_adj * 1.2),
+                             (self.get_supports_loc()[0][i] - (self.L * self.G_adj), -self.L * self.G_adj * 1.2)]
 
-        for i in range(0, len((self.supports_location()[1]))):
+        for i in range(0, len((self.get_supports_loc()[1]))):
             codes += [Path.MOVETO] + [Path.LINETO] * 3 + [Path.CLOSEPOLY]
-            vertices += [(self.supports_location()[1][i] - self.L * (self.G_adj), -self.L * self.G_adj * 1.2),
-                         (self.supports_location()[1][i] - self.L * (self.G_adj), self.H + self.L * self.G_adj * 1.2),
-                         (self.supports_location()[1][i] + self.L * (self.G_adj), self.H + self.L * self.G_adj * 1.2),
-                         (self.supports_location()[1][i] + self.L * (self.G_adj), -self.L * self.G_adj * 1.2),
-                         (self.supports_location()[1][i] - self.L * (self.G_adj), -self.L * self.G_adj * 1.2)]
+            vertices += [(self.get_supports_loc()[1][i] - self.L * (self.G_adj), -self.L * self.G_adj * 1.2),
+                         (self.get_supports_loc()[1][i] - self.L * (self.G_adj), self.H + self.L * self.G_adj * 1.2),
+                         (self.get_supports_loc()[1][i] + self.L * (self.G_adj), self.H + self.L * self.G_adj * 1.2),
+                         (self.get_supports_loc()[1][i] + self.L * (self.G_adj), -self.L * self.G_adj * 1.2),
+                         (self.get_supports_loc()[1][i] - self.L * (self.G_adj), -self.L * self.G_adj * 1.2)]
 
         vertices = np.array(vertices, float)
         path = Path(vertices, codes)
@@ -106,12 +110,12 @@ class BoundaryConditions(InteractiveModel):
 
         # reading the value and the positoin of external loads
         for i in range(0, len(load)):
-            if load[i][0] == -F or load[i][0] == F:
+            if load[i][0] == -self.F or load[i][0] == self.F:
                 value[0] = (load[i][0])
                 pos[0] = (load[i][1])
                 load_dic = dict(zip(value, pos))
-                load_ = sp.lambdify((F, l), load_dic)
-                Load_x = load_(self.F, self.L)
+                load_ = sp.lambdify((self.F, self.l), load_dic)
+                Load_x = load_(self.f, self.L)
 
                 # load arrow parameters
                 x_tail = (list(Load_x.values())[0])
@@ -120,7 +124,7 @@ class BoundaryConditions(InteractiveModel):
                 # moment
                 if load[i][2] == -2:
 
-                    if load[i][0] == -F:
+                    if load[i][0] == -self.F:
 
                         ax.plot([(list(Load_x.values())[0])], [(self.H / 2)],
                                 marker=r'$\circlearrowleft$', ms=self.H / 5)
@@ -130,13 +134,13 @@ class BoundaryConditions(InteractiveModel):
                         ax.plot([(list(Load_x.values())[0])], [(self.H / 2)],
                                 marker=r'$\circlearrowright$', ms=self.H / 5)
 
-                    ax.annotate('{} KN.mm'.format(np.round(self.F / 1000), 0),
+                    ax.annotate('{} KN.mm'.format(np.round(self.f / 1000), 0),
                                 xy=(list(Load_x.values())[0], self.H * 1.4), color='blue')
 
                 # point load   
                 elif load[i][2] == -1:
 
-                    if load[i][0] == -F:
+                    if load[i][0] == -self.F:
 
                         y_tail = self.L / 20 + self.H
                         y_head = 0 + self.H
@@ -144,7 +148,7 @@ class BoundaryConditions(InteractiveModel):
 
                         arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
                                                          color='blue', mutation_scale=self.L / 500)
-                        ax.annotate('{} KN'.format(np.round(self.F / 1000), 0),
+                        ax.annotate('{} KN'.format(np.round(self.f / 1000), 0),
                                     xy=(x_tail, y_tail), color='black')
                         ax.add_patch(arrow)
 
@@ -156,13 +160,13 @@ class BoundaryConditions(InteractiveModel):
 
                         arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
                                                          color='blue', mutation_scale=self.L / 500)
-                        ax.annotate('{} KN'.format(np.round(self.F / 1000), 0),
+                        ax.annotate('{} KN'.format(np.round(self.f / 1000), 0),
                                     xy=(x_head, y_head), color='black')
                         ax.add_patch(arrow)
 
                 else:
 
-                    if load[i][0] == -F:
+                    if load[i][0] == -self.F:
                         y_tail = self.L / 20 + self.H
                         y_head = 0 + self.H
                         dy = y_head + x_head / 10
@@ -180,7 +184,7 @@ class BoundaryConditions(InteractiveModel):
                                                              color='blue', mutation_scale=self.L / 500)
                             ax.add_patch(arrow)
 
-                        ax.annotate('{} KN'.format(np.round(self.F / 1000), 0),
+                        ax.annotate('{} KN'.format(np.round(self.f / 1000), 0),
                                     xy=(self.L / 2, y_tail * 1.1), color='black')
                         ax.plot([0, self.L], [y_tail, y_tail], color='blue')
 
@@ -202,7 +206,7 @@ class BoundaryConditions(InteractiveModel):
                                                              color='blue', mutation_scale=self.L / 500)
                             ax.add_patch(arrow)
 
-                        ax.annotate('{} KN'.format(np.round(self.F / 1000), 0),
+                        ax.annotate('{} KN'.format(np.round(self.f / 1000), 0),
                                     xy=(self.L / 2, y_head * 1.1), color='black')
                         ax.plot([0, self.L], [y_head, y_head], color='blue')
 
