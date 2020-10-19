@@ -2,7 +2,6 @@ import numpy as np
 import traits.api as tr
 from bmcs_utils.api import InteractiveModel, Item, View
 
-
 class Reinforcement(InteractiveModel):
     name = 'Reinforcement'
 
