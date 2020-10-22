@@ -298,9 +298,9 @@ class DeflectionProfile(InteractiveModel):
         #         ax3.plot(x, Q_x, color='green', label='shear [N]')
         #         leg = ax3.legend();
 
-        kappa_x = self.get_kappa_x()
+        kappa_x = self.get_kappa_x()    #self.mc.get_kappa(M)
         ax2.plot(x, kappa_x, color='black', label='$kappa$ [-]')
-        leg = ax2.legend();
+        ax2.legend();
 
         #         phi_x = self.get_phi_x()
         #         ax4.plot(x, phi_x, color='green', label='phi [-]')
@@ -308,4 +308,4 @@ class DeflectionProfile(InteractiveModel):
 
         w_x = self.get_w_x()
         ax3.plot(x, w_x, color='blue', label='$w$ [mm]')
-        leg = ax3.legend();
+        ax3.legend();
