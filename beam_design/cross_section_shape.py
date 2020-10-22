@@ -21,7 +21,7 @@ class CrossSectionShapeBase(InteractiveModel):
     """"This class describes the geometry of the cross section."""
     name = 'Cross section shape'
 
-    H = tr.Float(600)
+    H = tr.Float(200)
 
     ipw_view = View(
         Item('H', minmax=(10, 3000), latex='H [mm]')
