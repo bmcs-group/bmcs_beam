@@ -26,6 +26,69 @@ class BoundaryConditions(InteractiveModel):
     b3p.bc_deflection = [(0, 0), (l, 0)]
     b3p.solve_for_reaction_loads(R1, R2)
 
+    # 4 point bending example
+    x, E, I, F = sp.symbols('x E I F')
+    l = sp.symbols('l', positive=True)
+    b4p = Beam(l, E, I)
+    R1, R2 = sp.symbols('R1  R2')
+    b4p.apply_load(R1, 0, -1)
+    b4p.apply_load(R2, l, -1)
+    b4p.apply_load(-F, l / 3, -1)
+    b4p.apply_load(-F, 2 * l / 3, -1)
+    b4p.bc_deflection = [(0, 0), (l, 0)]
+    b4p.solve_for_reaction_loads(R1, R2)
+
+    # single moment example
+    x, E, I, F = sp.symbols('x E I F')
+    l = sp.symbols('l', positive=True)  # the l sign
+    bmo = Beam(l, E, I)
+    R1, R2 = sp.symbols('R1 R2')
+    bmo.apply_load(R1, 0, -1)
+    bmo.apply_load(R2, l, -1)
+    bmo.apply_load(F, l / 2, -2)
+    bmo.bc_deflection = [(0, 0), (l, 0)]
+    bmo.solve_for_reaction_loads(R1, R2)
+
+    # distrubuted load simple beam example
+    E, I, M, V = sp.symbols('E I M V')
+    bdi = Beam(l, E, I)
+    E, I, R1, R2 = sp.symbols('E I R1 R2')
+    bdi.apply_load(R1, 0, -1)
+    bdi.apply_load(R2, l, -1)
+    bdi.apply_load(-F, 0, 0)
+    bdi.bc_deflection = [(0, 0), (l, 0)]
+    bdi.solve_for_reaction_loads(R1, R2)
+
+    # 3 span distributed load example
+    x, E, I, F = sp.symbols('x E I F')
+    l = sp.symbols('l', positive=True)
+    b3s = Beam(l, E, I)
+    R1, R2, R3, R4 = sp.symbols('R1 R2 R3 R4')
+    b3s.apply_load(R1, 0, -1)
+    b3s.apply_load(R2, l / 3, -1)
+    b3s.apply_load(R3, 2 * l / 3, -1)
+    b3s.apply_load(R4, l, -1)
+    b3s.apply_load(-F, 0, 0)
+    b3s.bc_deflection = [(0, 0), (l / 3, 0), (2 * l / 3, 0), (l, 0)]
+    b3s.solve_for_reaction_loads(R1, R2, R3, R4)
+
+    # fixed support example
+    E, I, F = sp.symbols('E I F')
+    # l = sp.symbols('l', positive=True)
+    bf = Beam(l, E, I)
+    R1, R2 = sp.symbols('R1  R2')
+    M1, M2 = sp.symbols('M1, M2')
+    bf.apply_load(R1, 0, -1)
+    bf.apply_load(M1, 0, -2)
+    bf.apply_load(R2, l, -1)
+    bf.apply_load(M2, l, -2)
+    bf.apply_load(-F, l / 2, -1)
+    bf.bc_deflection = [(0, 0), (l, 0)]
+    bf.bc_slope = [(0, 0), (l, 0)]
+    bf.solve_for_reaction_loads(R1, R2, M1, M2)
+
+
+    # conf_name
     conf_name = b3p  # beam configuration name
 
     L = tr.Int(5000, param=True, latex='L \mathrm{[mm]}', minmax=(1000, 10000))
