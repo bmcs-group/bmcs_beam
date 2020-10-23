@@ -2,18 +2,18 @@ import matplotlib.patches as mpatches
 import numpy as np
 import sympy as sp
 import traits.api as tr
-from bmcs_beam.beam_design.boundary_conditions import BoundaryConditions
 from bmcs_beam.moment_curvature.moment_curvature import MomentCurvature
+from bmcs_beam.beam_design.boundary_conditions import BoundaryConditions
+
 from bmcs_utils.api import InteractiveModel, Item, View
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from scipy.integrate import cumtrapz
-
 from sympy.physics.continuum_mechanics.beam import Beam
 
 
-class DeflectionProfile(InteractiveModel):
-    name = 'DeflectionProfile'
+class MQPProfile(InteractiveModel):
+    name = 'M-Q profile'
 
     '''Temporary beam definition'''
     # 3 point bending example
@@ -30,20 +30,25 @@ class DeflectionProfile(InteractiveModel):
 
     conf_name = b3p  # beam configuration name
 
+    # bc = BoundaryConditions()
+    # get_supports_loc = bc.get_supports_loc
     mc = MomentCurvature()
+    # mc = tr.Instance(MomentCurvature, ())
+    # mc = tr.Property(depends_on='bc')
 
-    bc = tr.Instance(BoundaryConditions, ())
-    supports_loc = tr.Property(depends_on='bc')
+    bc = tr.Instance(BoundaryConditions,())
+    supports_loc = tr.Property(depends_on = 'bc')
 
     @tr.cached_property
     def _get_supports_loc(self):
-        return self.bc.get_supports_loc()
+        return  self.bc.get_supports_loc()
 
-    #     mc = tr.Property(depends_on = '+param')
-    #     @tr.cached_property
-    #     def _get_mc(self):
-    #         mc = MomentCurvature()
-    #         return mc
+    # bc = tr.Instance(BoundaryConditions, ())
+    # supports_loc = tr.Property(depends_on='bc')
+    #
+    # @tr.cached_property
+    # def get_supports_loc(self):
+    #     return self.bc.supports_loc()
 
     # Reinforcement
     E_carbon = tr.Int(200000)
@@ -109,10 +114,7 @@ class DeflectionProfile(InteractiveModel):
 
     def get_kappa_x(self):
         M = self.get_M_x()
-        #         I = (self.B*self.H**3)/12
         return self.mc.get_kappa(M)
-
-    #         return M / I / self.E_comp
 
     # b3p, b4p & bdi (single span configs)
     def get_phi_x(self):
@@ -121,16 +123,6 @@ class DeflectionProfile(InteractiveModel):
         phi_L2 = np.interp(self.L / 2, self.x, phi_x)
         phi_x -= phi_L2
         return phi_x
-
-    # b3s
-    #     def get_phi_x(self):
-    #         kappa_x = self.get_kappa_x()
-    #         phi_x = cumtrapz(kappa_x, self.x, initial=0)
-    #         peaks, _ = find_peaks(M_x, height=0)
-    #         M_x_p = M_x[peaks]
-    #         phi_L2 = np.interp(self.M_x_p, self.x, phi_x)
-    #         phi_x -= phi_L2
-    #         return phi_x
 
     def get_w_x(self):
         phi_x = self.get_phi_x()
@@ -287,25 +279,12 @@ class DeflectionProfile(InteractiveModel):
                                      xy=(self.L / 2, y_head * 1.1), color='black')
                         ax1.plot([0, self.L], [y_head, y_head], color='blue')
 
-
         x = self.x
 
-        #         M_x = self.get_M_x()
-        #         ax2.plot(x, -M_x, color='red', label='moment [N.mm]')
-        #         leg = ax2.legend();
+        Q_x = self.get_Q_x()
+        ax2.plot(x, Q_x, color='green', label='shear [N]')
+        leg = ax2.legend();
 
-        #         Q_x = self.get_Q_x()
-        #         ax3.plot(x, Q_x, color='green', label='shear [N]')
-        #         leg = ax3.legend();
-
-        kappa_x = self.get_kappa_x()    #self.mc.get_kappa(M)
-        ax2.plot(x, kappa_x, color='black', label='$kappa$ [-]')
-        ax2.legend();
-
-        #         phi_x = self.get_phi_x()
-        #         ax4.plot(x, phi_x, color='green', label='phi [-]')
-        #         leg = ax4.legend();
-
-        w_x = self.get_w_x()
-        ax3.plot(x, w_x, color='blue', label='$w$ [mm]')
-        ax3.legend();
+        M_x = self.get_M_x()
+        ax3.plot(x, -M_x, color='red', label='moment [N.mm]')
+        leg = ax3.legend();
