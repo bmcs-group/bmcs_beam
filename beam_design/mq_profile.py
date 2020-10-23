@@ -5,7 +5,7 @@ import traits.api as tr
 from bmcs_beam.moment_curvature.moment_curvature import MomentCurvature
 from bmcs_beam.beam_design.boundary_conditions import BoundaryConditions
 
-from bmcs_utils.api import InteractiveModel, Item, View
+from bmcs_utils.api import InteractiveModel, Item, View, Float, Int
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from scipy.integrate import cumtrapz
@@ -51,21 +51,21 @@ class MQPProfile(InteractiveModel):
     #     return self.bc.supports_loc()
 
     # Reinforcement
-    E_carbon = tr.Int(200000)
-    width = tr.Float(10)
-    thickness = tr.Float(1)
-    spacing = tr.Float(1)
-    n_layers = tr.Int(1)
-    A_roving = tr.Float(1)
+    E_carbon = Int(200000)
+    width = Float(10)
+    thickness = Float(1)
+    spacing = Float(1)
+    n_layers = Int(1)
+    A_roving = Float(1)
 
     # Concerte cross section
-    L = tr.Int(5000, param=True, latex='L \mathrm{mm}', minmax=(10, 10000))
-    H = tr.Int(200, param=True, latex='H \mathrm{mm}', minmax=(10, 500))
-    #     B = tr.Int(10, param=True, latex='B \mathrm{mm}', minmax=(10,500))
-    E_con = tr.Int(14000)
-    f = tr.Float(5000)
-    n_x = tr.Int(100)
-    G_adj = tr.Float(0.015)
+    L = Int(5000, param=True, latex='L \mathrm{mm}', minmax=(10, 10000))
+    H = Int(200, param=True, latex='H \mathrm{mm}', minmax=(10, 500))
+    #     B = Int(10, param=True, latex='B \mathrm{mm}', minmax=(10,500))
+    E_con = Int(14000)
+    f = Float(5000)
+    n_x = Int(100)
+    G_adj = Float(0.015)
 
     ipw_view = View(
         Item('E_con', param=True, latex='E \mathrm{MPa}', minmax=(14000, 41000)),

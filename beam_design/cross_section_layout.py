@@ -1,6 +1,7 @@
 import numpy as np
 import traits.api as tr
-from bmcs_utils.api import InteractiveModel, Item, View
+from bmcs_utils.api import \
+    InteractiveModel, Item, View, Float, Int
 
 class Reinforcement(InteractiveModel):
     name = 'Reinforcement'
@@ -21,22 +22,24 @@ class Reinforcement(InteractiveModel):
 
 
 class Fabric(Reinforcement):
-    E_carbon = tr.Int(200000)
-    width = tr.Float(8)
-    thickness = tr.Float(1)
-    spacing = tr.Float(1)
-    n_layers = tr.Int(1)
-    A_roving = tr.Float(1)
-    f_h = tr.Int(5)
+    """Reinforcement with a grid structure
+    """
+    E_carbon = Int(200000)
+    width = Float(8)
+    thickness = Float(1)
+    spacing = Float(1)
+    n_layers = Int(1)
+    A_roving = Float(1)
+    f_h = Int(5)
 
     ipw_view = View(
-        Item('E_carbon', param=True, latex='E_r \mathrm{[MPa]}', minmax=(200000, 300000)),
-        Item('width', param=True, latex='rov_w \mathrm{[mm]}', minmax=(8, 450)),
-        Item('thickness', param=True, latex='rov_t \mathrm{[mm]}', minmax=(1, 100)),
-        Item('spacing', param=True, latex='ro_s \mathrm{[mm]}', minmax=(1, 100)),
-        Item('n_layers', param=True, latex='n_l \mathrm{[-]}', minmax=(1, 100)),
-        Item('A_roving', param=True, latex='A_r \mathrm{[mm^2]}', minmax=(1, 100)),
-        Item('f_h', param=True, latex='f_h \mathrm{[mm]}', minmax=(5, 500))
+        Item('E_carbon', latex='E_r \mathrm{[MPa]}', minmax=(200000, 300000)),
+        Item('width', latex='rov_w \mathrm{[mm]}', minmax=(8, 450)),
+        Item('thickness', latex='rov_t \mathrm{[mm]}', minmax=(1, 100)),
+        Item('spacing', latex='ro_s \mathrm{[mm]}', minmax=(1, 100)),
+        Item('n_layers', latex='n_l \mathrm{[-]}', minmax=(1, 100)),
+        Item('A_roving', latex='A_r \mathrm{[mm^2]}', minmax=(1, 100)),
+        Item('f_h', latex='f_h \mathrm{[mm]}', minmax=(5, 500))
     )
 
 
@@ -47,33 +50,33 @@ class Bar(Reinforcement):
 class Matrix(InteractiveModel):
     name = 'Matrix'
 
-    ipw_view = View(
-        Item('E_ct', minmax=(10, 50000), latex='E_{ct} [N/mm^2]'),
-        Item('E_cc', minmax=(10, 50000), latex='E_{cc} [N/mm^2]')
-        # TODO->Saeed: complete these
-    )
-
-    E_ct = tr.Float(24000)
+    E_ct = Float(24000)
     """E modulus of matrix on tension"""
 
-    E_cc = tr.Float(25000)
+    E_cc = Float(25000)
     """E modulus of matrix on compression"""
 
-    eps_cr = tr.Float(0.001)
+    eps_cr = Float(0.001)
     """Matrix cracking strain"""
 
-    eps_cy = tr.Float(-0.003)
+    eps_cy = Float(-0.003)
     """Matrix compressive yield strain"""
 
-    eps_cu = tr.Float(-0.01)
+    eps_cu = Float(-0.01)
     """Ultimate matrix compressive strain"""
 
-    eps_tu = tr.Float(0.003)
+    eps_tu = Float(0.003)
     """Ultimate matrix tensile strain"""
 
-    mu = tr.Float(0.33)
+    mu = Float(0.33)
     """Post crack tensile strength ratio (represents how much strength is left after the crack because of short steel 
     fibers in the mixture)"""
+
+    ipw_view = View(
+        Item('E_ct', latex='E_{ct} [N/mm^2]'),
+        Item('E_cc', latex='E_{cc} [N/mm^2]')
+        # TODO->Saeed: complete these
+    )
 
     def update_plot(self, axes):
         pass
@@ -87,9 +90,6 @@ class CrossSectionLayout(InteractiveModel):
 
     beam_design = tr.WeakRef
 
-    ipw_view = View(
-    )
-
     def get_comp_E(self):
         H = self.beam_design.cross_section_shape.H
         A_composite = self.b * H
@@ -99,6 +99,9 @@ class CrossSectionLayout(InteractiveModel):
         A_concrete = A_composite - A_carbon
         E_comp = (self.E_carbon * A_carbon + self.E_con * A_concrete) / (A_composite)
         return E_comp
+
+    ipw_view = View(
+    )
 
     def subplots(self, fig):
         return fig.subplots(1, 1)

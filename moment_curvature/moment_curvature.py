@@ -8,7 +8,7 @@ from bmcs_beam.beam_design.beam_design import BeamDesign
 from scipy.optimize import root
 from bmcs_utils.api import \
     InteractiveModel, Item, View, mpl_align_xaxis, \
-    SymbExpr, InjectSymbExpr
+    SymbExpr, InjectSymbExpr, Float, Int
 
 
 class MomentCurvatureSymbolic(SymbExpr):
@@ -92,8 +92,10 @@ class MomentCurvatureSymbolic(SymbExpr):
 class MomentCurvature(InteractiveModel, InjectSymbExpr):
     """Class returning the moment curvature relationship.
     """
+    name = 'Moment-Curvature'
     ipw_view = View(
-        Item('n_m', latex='n_m \mathrm{[mm]}', minmax=(1, 10000))
+        Item('n_m', latex='n_m \mathrm{[mm]}', minmax=(1, 10000)),
+        Item('idx')
     )
 
     symb_class = MomentCurvatureSymbolic
@@ -126,7 +128,7 @@ class MomentCurvature(InteractiveModel, InjectSymbExpr):
     E_j = tr.DelegatesTo('reinforcement')
     eps_sy_j = tr.DelegatesTo('reinforcement')
 
-    n_m = tr.Int(100)
+    n_m = Int(100)
 
     z_m = tr.Property(depends_on='n_m, h')
 
@@ -231,7 +233,7 @@ class MomentCurvature(InteractiveModel, InjectSymbExpr):
             self.kappa_t[:, np.newaxis], self.eps_bot_t[:, np.newaxis],self.z_m[np.newaxis, :]
         )
 
-    idx = tr.Int(0)
+    idx = Int(0)
 
     M_norm = tr.Property()
 
@@ -273,9 +275,9 @@ class MomentCurvature(InteractiveModel, InjectSymbExpr):
         ax3.fill_betweenx(self.z_m, self.sig_tm[idx, :], 0, alpha=0.1)
         mpl_align_xaxis(ax2, ax3)
 
-    M_scale = tr.Float(1e+6)
+    M_scale = Float(1e+6)
 
-    def plot(self, ax1, ax2):
+    def plot(self, ax1, ax2, ax3):
         idx = self.idx
         ax1.plot(self.kappa_t, self.M_t / self.M_scale)
         ax1.set_ylabel('Moment [kN.m]')
@@ -286,7 +288,6 @@ class MomentCurvature(InteractiveModel, InjectSymbExpr):
         # print('Z', self.z_j)
         # print(self.N_s_tj[idx, :])
         # ax2.fill_between(eps_z_arr[idx,:], z_arr, 0, alpha=0.1);
-        ax3 = ax2.twiny()
         #        ax3.plot(self.eps_tm[idx, :], self.z_m, color='k', linewidth=0.8)
         ax3.plot(self.sig_tm[idx, :], self.z_m)
         ax3.axvline(0, linewidth=0.8, color='k')
@@ -294,7 +295,9 @@ class MomentCurvature(InteractiveModel, InjectSymbExpr):
         mpl_align_xaxis(ax2, ax3)
 
     def subplots(self, fig):
-        return fig.subplots(1,2)
+        ax1, ax2 = fig.subplots(1,2)
+        ax3 = ax2.twiny()
+        return ax1, ax2, ax3
 
     def update_plot(self, axes):
         self.plot(*axes)

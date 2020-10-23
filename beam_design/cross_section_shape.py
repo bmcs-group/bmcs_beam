@@ -2,7 +2,7 @@ import traits.api as tr
 from bmcs_utils.api import InteractiveModel
 import numpy as np
 import sympy as sp
-from bmcs_utils.models.interactive_window import View, Item
+from bmcs_utils.api import View, Item, Float
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon
 
@@ -21,7 +21,7 @@ class CrossSectionShapeBase(InteractiveModel):
     """"This class describes the geometry of the cross section."""
     name = 'Cross section shape'
 
-    H = tr.Float(200)
+    H = Float(200)
 
     ipw_view = View(
         Item('H', minmax=(10, 3000), latex='H [mm]')
@@ -30,7 +30,7 @@ class CrossSectionShapeBase(InteractiveModel):
 
 @tr.provides(ICrossSectionShape)
 class Rectangle(CrossSectionShapeBase):
-    B = tr.Float(250)
+    B = Float(250)
 
     ipw_view = View(
         *CrossSectionShapeBase.ipw_view.content,        # this will add View Items of the base class CrossSectionShapeBase
@@ -68,16 +68,16 @@ class Circle(CrossSectionShapeBase):
     def update_plot(self, ax):
         # TODO->Saeed: fix this
         ax.axis('equal')
-        ax.Circle((0, 0), self.R, color='gray', linewidth=4, fill=True)
+        #ax.Circle((0, 0), self.R, color='gray', linewidth=4, fill=True)
 
 
 @tr.provides(ICrossSectionShape)
 class TShape(CrossSectionShapeBase):
     name = 'T-shape'
 
-    B_f = tr.Float(250, input=True)
-    B_w = tr.Float(100, input=True)
-    H_w = tr.Float(100, input=True)
+    B_f = Float(250, input=True)
+    B_w = Float(100, input=True)
+    H_w = Float(100, input=True)
 
     ipw_view = View(
         *CrossSectionShapeBase.ipw_view.content,
