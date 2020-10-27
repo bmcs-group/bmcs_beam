@@ -4,7 +4,7 @@ import sympy as sp
 import traits.api as tr
 from bmcs_beam.beam_design.boundary_conditions import BoundaryConditions
 from bmcs_beam.moment_curvature.moment_curvature import MomentCurvature
-from bmcs_utils.api import InteractiveModel, Item, View
+from bmcs_utils.api import InteractiveModel, Item, View, Float, Int
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from scipy.integrate import cumtrapz
@@ -46,33 +46,33 @@ class DeflectionProfile(InteractiveModel):
     #         return mc
 
     # Reinforcement
-    E_carbon = tr.Int(200000)
-    width = tr.Float(10)
-    thickness = tr.Float(1)
-    spacing = tr.Float(1)
-    n_layers = tr.Int(1)
-    A_roving = tr.Float(1)
+    E_carbon = Int(200000)
+    width = Float(10)
+    thickness = Float(1)
+    spacing = Float(1)
+    n_layers = Int(1)
+    A_roving = Float(1)
 
     # Concerte cross section
-    L = tr.Int(5000, param=True, latex='L \mathrm{mm}', minmax=(10, 10000))
-    H = tr.Int(200, param=True, latex='H \mathrm{mm}', minmax=(10, 500))
-    #     B = tr.Int(10, param=True, latex='B \mathrm{mm}', minmax=(10,500))
-    E_con = tr.Int(14000)
-    f = tr.Float(5000)
-    n_x = tr.Int(100)
-    G_adj = tr.Float(0.015)
+    L = Int(5000, param=True, latex='L \mathrm{mm}', minmax=(10, 10000))
+    H = Int(200, param=True, latex='H \mathrm{mm}', minmax=(10, 500))
+    #     B = Int(10, param=True, latex='B \mathrm{mm}', minmax=(10,500))
+    E_con = Int(14000)
+    f = Float(5000)
+    n_x = Int(100)
+    G_adj = Float(0.015)
 
     ipw_view = View(
-        Item('E_con', param=True, latex='E \mathrm{MPa}', minmax=(14000, 41000)),
-        Item('f', param=True, latex='F \mathrm{N}', minmax=(10, 100000)),
-        Item('E_carbon', param=True, latex='E_r \mathrm{MPa}', minmax=(200000, 300000)),
-        Item('width', param=True, latex='rov_w \mathrm{mm}', minmax=(10, 450)),
-        Item('thickness', param=True, latex='rov_t \mathrm{mm}', minmax=(1, 100)),
-        Item('spacing', param=True, latex='ro_s \mathrm{mm}', minmax=(1, 100)),
-        Item('n_layers', param=True, latex='n_l \mathrm{-}', minmax=(1, 100)),
-        Item('A_roving', param=True, latex='A_r \mathrm{mm^2}', minmax=(1, 100)),
-        Item('G_adj', param=True, latex='G_{adj} \mathrm{-}', minmax=(1e-3, 1e-1)),
-        Item('n_x', param=True, latex='n_x \mathrm{-}', minmax=(1, 1000))
+        Item('E_con', latex='E \mathrm{MPa}', minmax=(14000, 41000)),
+        Item('f', latex='F \mathrm{N}', minmax=(10, 100000)),
+        Item('E_carbon', latex='E_r \mathrm{MPa}', minmax=(200000, 300000)),
+        Item('width', latex='rov_w \mathrm{mm}', minmax=(10, 450)),
+        Item('thickness', latex='rov_t \mathrm{mm}', minmax=(1, 100)),
+        Item('spacing', latex='ro_s \mathrm{mm}', minmax=(1, 100)),
+        Item('n_layers', latex='n_l \mathrm{-}', minmax=(1, 100)),
+        Item('A_roving', latex='A_r \mathrm{mm^2}', minmax=(1, 100)),
+        Item('G_adj', latex='G_{adj} \mathrm{-}', minmax=(1e-3, 1e-1)),
+        Item('n_x', latex='n_x \mathrm{-}', minmax=(1, 1000))
     )
 
     x = tr.Property(depends_on='+param')

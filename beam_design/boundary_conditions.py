@@ -4,7 +4,7 @@ import sympy as sp
 import traits.api as tr
 from bmcs_beam.moment_curvature.moment_curvature import MomentCurvature
 from bmcs_beam.beam_design.beam_design import BeamDesign
-from bmcs_utils.api import InteractiveModel, Item, View
+from bmcs_utils.api import InteractiveModel, Item, View, Float, Int
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from scipy.integrate import cumtrapz
@@ -102,16 +102,16 @@ class BoundaryConditions(InteractiveModel):
 
     # L = tr.Int(5000, param=True, latex='L \mathrm{[mm]}', minmax=(1000, 10000))
     # H = tr.Int(200, param=True, latex='H \mathrm{[mm]}', minmax=(10, 500))
-    f = tr.Float(1000) #TODO solve the issue of l/L and f/F
-    n_sup = tr.Int(2)
-    G_adj = tr.Float(0.02)
-    F_pos = tr.Int(2500)
+    f = Float(1000) #TODO solve the issue of l/L and f/F
+    n_sup = Int(2)
+    G_adj = Float(0.02)
+    F_pos = Int(2500)
 
     ipw_view = View(
-        Item('f', param=True, latex='F \mathrm{[N]}', minmax=(1000, 10000)), # the name might be confusing
-        Item('n_sup', param=True, latex='n_{sup} \mathrm{[-]}', minmax=(2, 10)),  # number of supports
-        Item('G_adj', param=True, latex='G_{adj} \mathrm{[-]}', minmax=(1e-3, 1e-1)),  # Graphic adjustment factor
-        Item('F_pos', param=True, latex='F_{pos} \mathrm{[mm]}', minmax=(0, 10000)),  # Force position
+        Item('f', latex='F \mathrm{[N]}', minmax=(1000, 10000)), # the name might be confusing
+        Item('n_sup', latex='n_{sup} \mathrm{[-]}', minmax=(2, 10)),  # number of supports
+        Item('G_adj', latex='G_{adj} \mathrm{[-]}', minmax=(1e-3, 1e-1)),  # Graphic adjustment factor
+        Item('F_pos', latex='F_{pos} \mathrm{[mm]}', minmax=(0, 10000)),  # Force position
     )
 
     def get_supports_loc(self):

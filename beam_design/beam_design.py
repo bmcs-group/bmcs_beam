@@ -1,6 +1,6 @@
 from bmcs_beam.beam_design.cross_section_layout import CrossSectionLayout
 from bmcs_beam.beam_design.cross_section_shape import Rectangle, ICrossSectionShape
-from bmcs_utils.api import InteractiveModel, Item, View
+from bmcs_utils.api import InteractiveModel, Item, View, Float
 import traits.api as tr
 import numpy as np
 
@@ -18,11 +18,11 @@ class BeamDesign(InteractiveModel):
 
     name = 'BeamDesign'
 
-    L = tr.Float(5000)
+    L = Float(5000)
     H = tr.DelegatesTo('cross_section_shape')
 
     ipw_view = View(
-        Item('L', latex='L \mathrm{[mm]}', minmax=(1000, 10000))
+        Item('L', latex='L \mathrm{[mm]}')
     )
 
     def subplots(self, fig):
