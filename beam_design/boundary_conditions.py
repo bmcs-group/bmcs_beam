@@ -2,8 +2,8 @@ import matplotlib.patches as mpatches
 import numpy as np
 import sympy as sp
 import traits.api as tr
-from bmcs_beam.moment_curvature.moment_curvature import MomentCurvature
-from bmcs_beam.beam_design.beam_design import BeamDesign
+from moment_curvature.moment_curvature import MomentCurvature
+from beam_design.beam_design_ import BeamDesign
 from bmcs_utils.api import InteractiveModel, Item, View, Float, Int
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path

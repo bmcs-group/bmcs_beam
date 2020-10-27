@@ -1,7 +1,7 @@
 import sympy as sp
 import numpy as np
 import matplotlib.pyplot as plt
-from moment_curvature_ import MomentCurvature, ModelData
+from moment_curvature.moment_curvature_ import MomentCurvature, ModelData
 
 
 def run_example_with_default_params():

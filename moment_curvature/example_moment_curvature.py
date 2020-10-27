@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
-from moment_curvature import MomentCurvature
-from bmcs_beam.beam_design.cross_section_shape import TShape
-from bmcs_beam.beam_design.beam_design import BeamDesign
+from moment_curvature.moment_curvature import MomentCurvature
+from beam_design.cross_section_shape import TShape
+from beam_design.beam_design_ import BeamDesign
 import numpy as np
 import sympy as sp
 

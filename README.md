@@ -1,1 +1,3 @@
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/bmcs-group/bmcs_beam/master?filepath=https%3A%2F%2Fgithub.com%2Fbmcs-group%2Fbmcs_beam%2Fblob%2Fmaster%2Fnotebooks%2Fmoment_curvature_saeed.ipynb)
+# Models of Brittle-Matrix-Composite Beams
+
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/bmcs-group/bmcs_beam/master?urlpath=%2Fapps%2Fbeam_design/mq_profile.ipynb) - Start a simple example

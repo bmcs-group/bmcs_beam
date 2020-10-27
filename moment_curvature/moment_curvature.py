@@ -4,7 +4,7 @@
 import numpy as np
 import sympy as sp
 import traits.api as tr
-from bmcs_beam.beam_design.beam_design import BeamDesign
+from beam_design.beam_design_ import BeamDesign
 from scipy.optimize import root
 from bmcs_utils.api import \
     InteractiveModel, Item, View, mpl_align_xaxis, \
