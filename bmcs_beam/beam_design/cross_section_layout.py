@@ -112,7 +112,7 @@ class CrossSectionLayout(InteractiveModel):
         # TODO->Saeed: the previous line will plot a cross section, please add the steel to it just as red strips in z_j locations
         #  and with a width that is relative to A_j (get z_j and A_j values from 'reinforcement' class variable)
         #  (just fix, generalize and improve the following)
-        H = self.beam_design.cross_section_shape.H
+        H = int(self.beam_design.cross_section_shape.H)
         max_B = np.max(self.beam_design.cross_section_shape.get_b(np.linspace(0, 100, H)))
         z1 = self.reinforcement.z_j[0]
         ax.plot([0, max_B], [z1, z1], color='r', linewidth=5)
