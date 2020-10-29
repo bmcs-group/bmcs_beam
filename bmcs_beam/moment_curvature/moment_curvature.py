@@ -251,12 +251,19 @@ class MomentCurvature(InteractiveModel, InjectSymbExpr):
     M_kappa_data = tr.Property()
     def _get_M_kappa_data(self):
         """cut off the descending tails"""
-        M_t = self.M_t
+        
+        M_t = self.M_t #(the negative sign ---> returns empty M_I and kappa_I
         I_max = np.argmax(M_t)
         I_min = np.argmin(M_t)
         M_I = self.M_t[I_min:I_max]
         kappa_I = self.kappa_t[I_min:I_max]
         return M_I, kappa_I
+
+    """ get_kappa from moment_curvature_.py"""
+#         I_M = np.where(self.M_t[1:] - self.M_t[:-1] > 0)
+#         M_I = self.M_t[I_M]
+#         kappa_I = self.kappa_t[I_M]
+#         return M_I, kappa_I
 
     def get_kappa(self, M):
         M_I, kappa_I = self.M_kappa_data
