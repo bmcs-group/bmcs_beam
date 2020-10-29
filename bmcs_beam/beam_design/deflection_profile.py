@@ -56,7 +56,7 @@ class DeflectionProfile(InteractiveModel):
     # Concerte cross section
     L = Int(5000, param=True, latex='L \mathrm{mm}', minmax=(10, 10000))
     H = Int(200, param=True, latex='H \mathrm{mm}', minmax=(10, 500))
-    #     B = Int(10, param=True, latex='B \mathrm{mm}', minmax=(10,500))
+    B = Int(10, param=True, latex='B \mathrm{mm}', minmax=(10,500))
     E_con = Int(14000)
     f = Float(5000)
     n_x = Int(100)
