@@ -10,7 +10,6 @@ import sys
 from shutil import rmtree
 
 from setuptools import find_packages, setup, Command
-from bmcs_beam.version import CURRENT_VERSION
 
 # Package meta-data.
 NAME = 'bmcs_beam'
@@ -20,7 +19,7 @@ EMAIL = 'rostislav.chudoba@rwt-aachen.de'
 AUTHOR = 'BMCS-Group: Saeed Rastegarian, Homam Spartali, Rostislav Chudoba'
 REQUIRES_PYTHON = '>=3.6.0'
 from bmcs_beam.version import __version__
-VERSION = CURRENT_VERSION
+VERSION = __version__
 
 # What packages are required for this module to be executed?
 REQUIRED = [
