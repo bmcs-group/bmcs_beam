@@ -10,7 +10,7 @@ import sys
 from shutil import rmtree
 
 from setuptools import find_packages, setup, Command
-from version import CURRENT_VERSION
+from bmcs_beam.version import CURRENT_VERSION
 
 # Package meta-data.
 NAME = 'bmcs_beam'
@@ -19,6 +19,7 @@ URL = 'https://github.com/bmcs-group/bmcs_beam'
 EMAIL = 'rostislav.chudoba@rwt-aachen.de'
 AUTHOR = 'BMCS-Group: Saeed Rastegarian, Homam Spartali, Rostislav Chudoba'
 REQUIRES_PYTHON = '>=3.6.0'
+from bmcs_beam.version import __version__
 VERSION = CURRENT_VERSION
 
 # What packages are required for this module to be executed?
@@ -153,5 +154,6 @@ setup(
     # $ setup.py publish support.
     cmdclass={
         'upload': UploadCommand,
+        'release': ReleaseCommand
     },
 )
