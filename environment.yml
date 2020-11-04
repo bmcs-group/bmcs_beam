@@ -13,6 +13,6 @@ dependencies:
 - ipympl
 - pip
 - pip:
+  - bmcs-cross-section
+  - bmcs-utils
   - -e .
-  - bmcs_cross_section
-  - bmcs_utils
