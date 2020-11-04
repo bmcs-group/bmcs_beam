@@ -2,8 +2,8 @@ import matplotlib.patches as mpatches
 import numpy as np
 import sympy as sp
 import traits.api as tr
-from bmcs_beam.moment_curvature.moment_curvature import MomentCurvature
-from bmcs_beam.beam_design.boundary_conditions import BoundaryConditions
+from bmcs_cross_section.mkappa import MKappa
+from bmcs_beam.beam_bc.boundary_conditions import BoundaryConditions
 
 from bmcs_utils.api import InteractiveModel, Item, View, Float, Int
 from matplotlib.patches import PathPatch
@@ -32,7 +32,7 @@ class MQPProfile(InteractiveModel):
 
     # bc = BoundaryConditions()
     # get_supports_loc = bc.get_supports_loc
-    mc = MomentCurvature()
+    mc = tr.Instance(MKappa, ())
     # mc = tr.Instance(MomentCurvature, ())
     # mc = tr.Property(depends_on='bc')
 

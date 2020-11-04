@@ -2,8 +2,9 @@ import matplotlib.patches as mpatches
 import numpy as np
 import sympy as sp
 import traits.api as tr
-from bmcs_beam.beam_design.boundary_conditions import BoundaryConditions
-from bmcs_beam.moment_curvature.moment_curvature import MomentCurvature
+from bmcs_beam.beam_bc.boundary_conditions import BoundaryConditions
+from bmcs_beam.beam_bc.mq_profile import MQPProfile
+from bmcs_cross_section.mkappa import MKappa
 from bmcs_utils.api import InteractiveModel, Item, View, Float, Int
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
@@ -30,7 +31,9 @@ class DeflectionProfile(InteractiveModel):
 
     conf_name = b3p  # beam configuration name
 
-    mc = MomentCurvature()
+    mc = tr.Instance(MKappa, ())
+
+    mq_profile = tr.Instance(MQPProfile, ())
 
     bc = tr.Instance(BoundaryConditions, ())
     supports_loc = tr.Property(depends_on='bc')
@@ -108,9 +111,9 @@ class DeflectionProfile(InteractiveModel):
         return Q_x
 
     def get_kappa_x(self):
-        M = self.get_M_x()
+        M = self.mq_profile.get_M_x()
         #         I = (self.B*self.H**3)/12
-        return self.mc.get_kappa(M)
+        return self.mc.get_kappa_M(M)
 
     #         return M / I / self.E_comp
 

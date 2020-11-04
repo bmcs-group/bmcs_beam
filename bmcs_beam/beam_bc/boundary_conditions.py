@@ -2,7 +2,7 @@ import matplotlib.patches as mpatches
 import numpy as np
 import sympy as sp
 import traits.api as tr
-from bmcs_beam.beam_design.beam_design import BeamDesign
+from bmcs_beam.beam_bc.beam_design import BeamDesign
 from bmcs_utils.api import InteractiveModel, Item, View, Float, Int
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
@@ -123,7 +123,7 @@ class BoundaryConditions(InteractiveModel):
         for i in range(0, len(self.conf_name.bc_slope)):
             loc_s_.append(self.conf_name.bc_slope[i][0])
 
-        loc_d = dict(list(enumerate(loc_d_)))  # boundary conditions with confined deflection
+        loc_d = dict(list(enumerate(loc_d_)))  # boundary conditions with confined bending
         loc_d_l_ = sp.lambdify((self.l), loc_d)
         loc_d_l = (loc_d_l_(self.L))
 

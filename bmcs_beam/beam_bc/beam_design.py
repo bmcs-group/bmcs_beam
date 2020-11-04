@@ -1,26 +1,16 @@
 
-from bmcs_beam.beam_design.cross_section_layout import CrossSectionLayout
-from bmcs_beam.beam_design.cross_section_shape import Rectangle, ICrossSectionShape
+from bmcs_cross_section.cs_design import CSDesign
+from bmcs_cross_section.cs_design import Rectangle, ICrossSectionShape
 from bmcs_utils.api import InteractiveModel, Item, View, Float
 import traits.api as tr
 import numpy as np
 
 
-class BeamDesign(InteractiveModel):
-    cross_section_layout = tr.Instance(CrossSectionLayout)
-
-    def _cross_section_layout_default(self):
-        return CrossSectionLayout(beam_design=self)
-
-    cross_section_shape = tr.Instance(ICrossSectionShape)
-
-    def _cross_section_shape_default(self):
-        return Rectangle()
+class BeamDesign(CSDesign):
 
     name = 'BeamDesign'
 
     L = Float(5000)
-    H = tr.DelegatesTo('cross_section_shape')
 
     ipw_view = View(
         Item('L', latex='L \mathrm{[mm]}')
