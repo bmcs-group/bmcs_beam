@@ -1,3 +1,11 @@
+"""
+Verification with:
+Yao, Y, Mobasher, B, Wang, J, Xu, Q.
+Analytical approach for the design of flexural elements made of
+reinforced ultra‐high performance concrete. Structural Concrete. 2020; 1– 20.
+https://doi.org/10.1002/suco.201900404
+"""
+
 import sympy as sp
 import numpy as np
 import matplotlib.pyplot as plt
