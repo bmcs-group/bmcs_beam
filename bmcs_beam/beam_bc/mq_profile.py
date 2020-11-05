@@ -4,12 +4,10 @@ import sympy as sp
 import traits.api as tr
 from bmcs_cross_section.mkappa import MKappa
 from bmcs_beam.beam_bc.boundary_conditions import BoundaryConditions
-
 from bmcs_utils.api import InteractiveModel, \
-    Item, View, Float, Int, FloatRangeEditor
+    Item, View, Float, Int, FloatEditor, FloatRangeEditor, mpl_align_yaxis
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
-from scipy.integrate import cumtrapz
 from sympy.physics.continuum_mechanics.beam import Beam
 
 
@@ -65,11 +63,12 @@ class MQPProfile(InteractiveModel):
     G_adj = Float(0.015)
 
     ipw_view = View(
-        Item('F_max', latex='F_\mathrm{max} [\mathrm{N}]', minmax=(10, 100000)),
         Item('theta_F', latex=r'\theta [-]',
              editor=FloatRangeEditor(low=0, high=1)),
+        Item('F_max', latex='F_\mathrm{max} [\mathrm{N}]',
+             readonly=True),
         Item('G_adj', param=True, latex='G_{adj} [\mathrm{-}]', minmax=(1e-3, 1e-1)),
-        Item('n_x', param=True, latex='n_x [\mathrm{-}]', minmax=(1, 1000))
+        Item('n_x', param=True, latex='n_x [\mathrm{-}]'),
     )
 
     x = tr.Property(depends_on='+param')
@@ -89,7 +88,6 @@ class MQPProfile(InteractiveModel):
         x, F, l = sp.symbols('x F l')
         Q_ = self.conf_name.shear_force().rewrite(sp.Piecewise)
         get_Q = sp.lambdify((x, F, l), Q_, 'numpy')
-        print('F', self.F)
         Q_x = get_Q(self.x, self.F, self.L)
         return Q_x
 
@@ -97,7 +95,6 @@ class MQPProfile(InteractiveModel):
         # beam
         ax1.fill([0, self.L, self.L, 0, 0], [0, 0, self.H, self.H, 0], color='gray')
         #         ax.plot([0,self.L,self.L,0,0], [0,0,self.H,self.H,0],color='black')
-
         # supports
         vertices = []
         codes = []
@@ -243,17 +240,20 @@ class MQPProfile(InteractiveModel):
     def plot_MQ(self, ax2, ax3):
         x = self.x
 
-        Q_x = self.get_Q_x()
-        ax2.plot(x, Q_x, color='green', label='shear [N]')
-        ax2.set_ylabel('Q [N]')
-        ax2.set_xlabel('x [mm]')
-        leg = ax2.legend();
+        M_scale = self.mc.M_scale
+        M_x = self.get_M_x() / M_scale
+        ax2.plot(x, -M_x, color='red', label='moment [kNm]')
+        ax2.fill(x, -M_x, color='red', alpha=0.1)
+        ax2.set_ylabel('M [kNm]')
+        ax2.legend();
 
-        M_x = self.get_M_x()
-        ax3.plot(x, -M_x, color='red', label='moment [N.mm]')
-        ax3.fill(x, -M_x, color='red', alpha=0.3)
-        ax3.set_ylabel('M [Nmm]')
-        leg = ax3.legend();
+        Q_x = self.get_Q_x() / 1000
+        ax3.plot(x, Q_x, lw=0.1, color='green', label='shear [kN]')
+        ax3.fill_between(x, Q_x, 0, color='green', alpha=0.1)
+        ax3.set_ylabel('Q [kN]')
+        ax3.set_xlabel('x [mm]')
+        ax3.legend();
+        mpl_align_yaxis(ax2, 0, ax3, 0)
 
     def subplots(self, fig):
         ax1, ax2 = fig.subplots(2, 1)
@@ -262,6 +262,5 @@ class MQPProfile(InteractiveModel):
 
     def update_plot(self, axes):
         ax1, ax2, ax3 = axes
-        print('update plot', self.F)
         self.plot_geo(ax1)
         self.plot_MQ(ax2, ax3)
