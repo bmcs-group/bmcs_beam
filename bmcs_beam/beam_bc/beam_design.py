@@ -1,6 +1,5 @@
 
 from bmcs_cross_section.cs_design import CSDesign
-from bmcs_cross_section.cs_design import Rectangle, ICrossSectionShape
 from bmcs_utils.api import InteractiveModel, Item, View, Float
 import traits.api as tr
 import numpy as np
