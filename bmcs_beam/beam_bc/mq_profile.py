@@ -5,7 +5,8 @@ import traits.api as tr
 from bmcs_cross_section.mkappa import MKappa
 from bmcs_beam.beam_bc.boundary_conditions import BoundaryConditions
 
-from bmcs_utils.api import InteractiveModel, Item, View, Float, Int
+from bmcs_utils.api import InteractiveModel, \
+    Item, View, Float, Int, FloatRangeEditor
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from scipy.integrate import cumtrapz
@@ -15,69 +16,60 @@ from sympy.physics.continuum_mechanics.beam import Beam
 class MQPProfile(InteractiveModel):
     name = 'M-Q profile'
 
-    '''Temporary beam definition'''
-    # 3 point bending example
-
-    x, E, I, F = sp.symbols('x E I F')
-    l = sp.symbols('l', positive=True)  # the l sign
-    b3p = Beam(l, E, I)
-    R1, R2 = sp.symbols('R1 R2')
-    b3p.apply_load(R1, 0, -1)
-    b3p.apply_load(R2, l, -1)
-    b3p.apply_load(-F, l / 2, -1)
-    b3p.bc_deflection = [(0, 0), (l, 0)]
-    b3p.solve_for_reaction_loads(R1, R2)
-
-    conf_name = b3p  # beam configuration name
-
-    # bc = BoundaryConditions()
-    # get_supports_loc = bc.get_supports_loc
     mc = tr.Instance(MKappa, ())
-    # mc = tr.Instance(MomentCurvature, ())
-    # mc = tr.Property(depends_on='bc')
 
+    # @todo [SR]: this does not belong here - executable code at the
+    #        the logic of boundary conditions belongs into the
+    #        One possibility if to define the classes for elementary
+    #        configurations, e.g.:
+    #          - Beam3PSimplySupported
+    #          - Beam4PSimplySupported
+    #          - BeamCustomBC
+    #          - Beam3PClamped
+    #          - ...
+    #
     bc = tr.Instance(BoundaryConditions,())
+    bd = tr.DelegatesTo('bc', 'beam_design')
+    L = tr.DelegatesTo('bd')
+    H = tr.DelegatesTo('bd')
+
     supports_loc = tr.Property(depends_on = 'bc')
 
     @tr.cached_property
     def _get_supports_loc(self):
         return  self.bc.get_supports_loc()
 
-    # bc = tr.Instance(BoundaryConditions, ())
-    # supports_loc = tr.Property(depends_on='bc')
-    #
-    # @tr.cached_property
-    # def get_supports_loc(self):
-    #     return self.bc.supports_loc()
+    x, E, I, F_ = sp.symbols('x E I F')
+    l = sp.symbols('l', positive=True)  # the l sign
+    b3p = Beam(l, E, I)
+    R1, R2 = sp.symbols('R1 R2')
+    b3p.apply_load(R1, 0, -1)
+    b3p.apply_load(R2, l, -1)
+    b3p.apply_load(-F_, l / 2, -1)
+    b3p.bc_deflection = [(0, 0), (l, 0)]
+    b3p.solve_for_reaction_loads(R1, R2)
 
-    # Reinforcement
-    E_carbon = Int(200000)
-    width = Float(10)
-    thickness = Float(1)
-    spacing = Float(1)
-    n_layers = Int(1)
-    A_roving = Float(1)
+    conf_name = b3p  # beam configuration name
 
-    # Concerte cross section
-    L = Int(5000, param=True, latex='L \mathrm{mm}', minmax=(10, 10000))
-    H = Int(200, param=True, latex='H \mathrm{mm}', minmax=(10, 500))
-    #     B = Int(10, param=True, latex='B \mathrm{mm}', minmax=(10,500))
-    E_con = Int(14000)
-    f = Float(5000)
+    F_max = Float(1, desc='maximum load value', BC=True)
+    theta_F = Float(1.0, desc='load factor', BC=True)
+
+    F = tr.Property(depends_on='+BC')
+    '''Current value of load
+    '''
+    @tr.cached_property
+    def _get_F(self):
+        return self.F_max * self.theta_F
+
     n_x = Int(100)
     G_adj = Float(0.015)
 
     ipw_view = View(
-        Item('E_con', param=True, latex='E \mathrm{MPa}', minmax=(14000, 41000)),
-        Item('f', param=True, latex='F \mathrm{N}', minmax=(10, 100000)),
-        Item('E_carbon', param=True, latex='E_r \mathrm{MPa}', minmax=(200000, 300000)),
-        Item('width', param=True, latex='rov_w \mathrm{mm}', minmax=(10, 450)),
-        Item('thickness', param=True, latex='rov_t \mathrm{mm}', minmax=(1, 100)),
-        Item('spacing', param=True, latex='ro_s \mathrm{mm}', minmax=(1, 100)),
-        Item('n_layers', param=True, latex='n_l \mathrm{-}', minmax=(1, 100)),
-        Item('A_roving', param=True, latex='A_r \mathrm{mm^2}', minmax=(1, 100)),
-        Item('G_adj', param=True, latex='G_{adj} \mathrm{-}', minmax=(1e-3, 1e-1)),
-        Item('n_x', param=True, latex='n_x \mathrm{-}', minmax=(1, 1000))
+        Item('F_max', latex='F_\mathrm{max} [\mathrm{N}]', minmax=(10, 100000)),
+        Item('theta_F', latex=r'\theta [-]',
+             editor=FloatRangeEditor(low=0, high=1)),
+        Item('G_adj', param=True, latex='G_{adj} [\mathrm{-}]', minmax=(1e-3, 1e-1)),
+        Item('n_x', param=True, latex='n_x [\mathrm{-}]', minmax=(1, 1000))
     )
 
     x = tr.Property(depends_on='+param')
@@ -86,56 +78,22 @@ class MQPProfile(InteractiveModel):
     def _get_x(self):
         return np.linspace(0, self.L, self.n_x)
 
-    E_comp = tr.Property(depends_on='+param')
-
-    @tr.cached_property
-    def _get_E_comp(self):
-        A_composite = self.B * self.H
-        n_rovings = self.width / self.spacing
-        A_layer = n_rovings * self.A_roving
-        A_carbon = self.n_layers * A_layer
-        A_concrete = A_composite - A_carbon
-        E_comp = (self.E_carbon * A_carbon + self.E_con * A_concrete) / (A_composite)
-        return E_comp
-
     def get_M_x(self):
         x, F, l = sp.symbols('x F l')
         M_ = self.conf_name.bending_moment().rewrite(sp.Piecewise)
         get_M = sp.lambdify((x, F, l), M_, 'numpy')
-        M_x = get_M(self.x, self.f, self.L)
+        M_x = get_M(self.x, self.F, self.L)
         return M_x
 
     def get_Q_x(self):
         x, F, l = sp.symbols('x F l')
         Q_ = self.conf_name.shear_force().rewrite(sp.Piecewise)
         get_Q = sp.lambdify((x, F, l), Q_, 'numpy')
-        Q_x = get_Q(self.x, self.f, self.L)
+        print('F', self.F)
+        Q_x = get_Q(self.x, self.F, self.L)
         return Q_x
 
-    def get_kappa_x(self):
-        M = self.get_M_x()
-        return self.mc.get_kappa(M)
-
-    # b3p, b4p & bdi (single span configs)
-    def get_phi_x(self):
-        kappa_x = self.get_kappa_x()
-        phi_x = cumtrapz(kappa_x, self.x, initial=0)
-        phi_L2 = np.interp(self.L / 2, self.x, phi_x)
-        phi_x -= phi_L2
-        return phi_x
-
-    def get_w_x(self):
-        phi_x = self.get_phi_x()
-        w_x = cumtrapz(phi_x, self.x, initial=0)
-        w_x += w_x[0]
-        return w_x
-
-    def subplots(self, fig):
-        return fig.subplots(3, 1)
-
-    def update_plot(self, axes):
-        ax1, ax2, ax3 = axes
-
+    def plot_geo(self, ax1):
         # beam
         ax1.fill([0, self.L, self.L, 0, 0], [0, 0, self.H, self.H, 0], color='gray')
         #         ax.plot([0,self.L,self.L,0,0], [0,0,self.H,self.H,0],color='black')
@@ -144,6 +102,9 @@ class MQPProfile(InteractiveModel):
         vertices = []
         codes = []
 
+        # @TODO [SR]: Check this part of implementation - this should be possible
+        #        to transform to a more transparent implementation based on
+        #        bc-configurations objects.
         for i in range(0, len(self.supports_loc[0])):
 
             codes += [Path.MOVETO] + [Path.LINETO] * 2 + [Path.CLOSEPOLY]
@@ -279,12 +240,28 @@ class MQPProfile(InteractiveModel):
                                      xy=(self.L / 2, y_head * 1.1), color='black')
                         ax1.plot([0, self.L], [y_head, y_head], color='blue')
 
+    def plot_MQ(self, ax2, ax3):
         x = self.x
 
         Q_x = self.get_Q_x()
         ax2.plot(x, Q_x, color='green', label='shear [N]')
+        ax2.set_ylabel('Q [N]')
+        ax2.set_xlabel('x [mm]')
         leg = ax2.legend();
 
         M_x = self.get_M_x()
         ax3.plot(x, -M_x, color='red', label='moment [N.mm]')
+        ax3.fill(x, -M_x, color='red', alpha=0.3)
+        ax3.set_ylabel('M [Nmm]')
         leg = ax3.legend();
+
+    def subplots(self, fig):
+        ax1, ax2 = fig.subplots(2, 1)
+        ax3 = ax2.twinx()
+        return ax1, ax2, ax3
+
+    def update_plot(self, axes):
+        ax1, ax2, ax3 = axes
+        print('update plot', self.F)
+        self.plot_geo(ax1)
+        self.plot_MQ(ax2, ax3)

@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from bmcs_beam.moment_curvature.moment_curvature_ import MomentCurvature, ModelData
 
+# TODO [SR] - move this code to bmcs_cross_section
 # For info (left is the notation in Mobasher paper, right is notation in this file):
 # ------------------------------------------------------------------
 # E = E_ct
