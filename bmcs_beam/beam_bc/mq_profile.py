@@ -264,3 +264,5 @@ class MQPProfile(InteractiveModel):
         ax1, ax2, ax3 = axes
         self.plot_geo(ax1)
         self.plot_MQ(ax2, ax3)
+        ax1.axis('equal')
+        ax1.autoscale(tight=True)
