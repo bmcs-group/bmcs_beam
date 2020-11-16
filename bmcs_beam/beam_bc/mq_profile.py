@@ -17,7 +17,7 @@ class MQPProfile(InteractiveModel):
     mc = tr.Instance(MKappa, ())
 
     # @todo [SR]: this does not belong here - executable code at the
-    #        the logic of boundary conditions belongs into the
+    #        the logic of boundary conditions belongs into BeamBC
     #        One possibility if to define the classes for elementary
     #        configurations, e.g.:
     #          - Beam3PSimplySupported
@@ -31,12 +31,19 @@ class MQPProfile(InteractiveModel):
     L = tr.DelegatesTo('bd')
     H = tr.DelegatesTo('bd')
 
-    supports_loc = tr.Property(depends_on = 'bc')
+    _GEO = tr.Event
+    @tr.on_trait_change('bc, +GEO, bc._GEO')
+    def _reset_GEO(self):
+        self._GEO = True
+
+    supports_loc = tr.Property(depends_on = '_GEO')
 
     @tr.cached_property
     def _get_supports_loc(self):
         return  self.bc.get_supports_loc()
 
+    # TODO [SD]: Deprecated style - don't put function calls to the class level
+    #            This should be included in a function.
     x, E, I, F_ = sp.symbols('x E I F')
     l = sp.symbols('l', positive=True)  # the l sign
     b3p = Beam(l, E, I)
@@ -71,7 +78,7 @@ class MQPProfile(InteractiveModel):
         Item('n_x', param=True, latex='n_x [\mathrm{-}]'),
     )
 
-    x = tr.Property(depends_on='+param')
+    x = tr.Property(depends_on='_GEO')
 
     @tr.cached_property
     def _get_x(self):

@@ -12,15 +12,10 @@ class DeflectionProfile(MQPProfile):
     Deflection model of a BMCS beam
     '''
 
-    name = 'Deflection profile'
+    name = 'Deflection Profile'
 
     ipw_view = View(
         Item('n_x', param=True, latex='n_x [\mathrm{-}]'),
-        time_variable = 'theta_F',
-        time_max = 'F_max',
-        simulator = 'run',
-        reset_simulator = 'reset'
-#        Item('G_adj', param=True, latex='G_{adj} [\mathrm{-}]', minmax=(1e-3, 1e-1)),
     )
 
     def get_kappa_x(self):
@@ -56,6 +51,8 @@ class DeflectionProfile(MQPProfile):
         #           for other loading conditions.
         w_x += w_x[0]
         return w_x
+
+    theta_max = tr.Float(1)
 
     F_max = tr.Property(Float)
     ''''

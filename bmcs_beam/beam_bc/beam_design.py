@@ -9,16 +9,16 @@ class BeamDesign(CSDesign):
 
     name = 'BeamDesign'
 
-    L = Float(5000)
+    L = Float(5000, GEO=True)
 
     ipw_view = View(
         Item('L', latex='L \mathrm{[mm]}')
     )
 
-    def subplots(self, fig):
+    def xsubplots(self, fig):
         return fig.subplots(1, 1)
 
-    def update_plot(self, ax):
+    def xupdate_plot(self, ax):
         beam_points_x_coords = [0, self.L, self.L, 0, 0]
         beam_points_y_coords = [0, 0, self.H, self.H, 0]
         ax.fill(beam_points_x_coords, beam_points_y_coords, color='gray')

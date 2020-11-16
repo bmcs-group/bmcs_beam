@@ -16,7 +16,7 @@ class BoundaryConditions(InteractiveModel):
     def _beam_design_default(self):
         return BeamDesign()
 
-    name = 'BoundaryConditions'
+    name = 'Boundary Conditions'
 
     '''Temporary beam definition'''
     # 3 point bending example
@@ -97,6 +97,12 @@ class BoundaryConditions(InteractiveModel):
 
     L = tr.DelegatesTo('beam_design')
     H = tr.DelegatesTo('beam_design')
+
+    _GEO = tr.Event
+    @tr.on_trait_change('beam_design, +GEO, beam_design._GEO')
+    def _reset_GEO(self):
+        self._GEO = True
+
 
     # L = tr.Int(5000, param=True, latex='L \mathrm{[mm]}', minmax=(1000, 10000))
     # H = tr.Int(200, param=True, latex='H \mathrm{[mm]}', minmax=(10, 500))
