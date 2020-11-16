@@ -1,6 +1,7 @@
 
 import traits.api as tr
 import numpy as np
+from bmcs_utils.api import View, Item
 from bmcs_utils.api import Float, mpl_align_yaxis
 from bmcs_beam.beam_bc.mq_profile import MQPProfile
 from scipy.integrate import cumtrapz
@@ -11,7 +12,11 @@ class DeflectionProfile(MQPProfile):
     Deflection model of a BMCS beam
     '''
 
-    name = 'Deflection profile'
+    name = 'Deflection Profile'
+
+    ipw_view = View(
+        Item('n_x', param=True, latex='n_x [\mathrm{-}]'),
+    )
 
     def get_kappa_x(self):
         '''
@@ -47,6 +52,8 @@ class DeflectionProfile(MQPProfile):
         w_x += w_x[0]
         return w_x
 
+    theta_max = tr.Float(1)
+
     F_max = tr.Property(Float)
     ''''
     Identify the ultimate limit state based on the maximum moment capacity
@@ -58,6 +65,18 @@ class DeflectionProfile(MQPProfile):
         #
         M_I, kappa_I = self.mc.inv_M_kappa
         return 4 * M_I[-1] / self.L
+
+    def run(self):
+        theta_arr = np.linspace(0,1,41)
+        F_arr = self.F_max * theta_arr
+        w_list = []
+        for theta in theta_arr:
+            self.theta_F = theta
+            w_list.append(np.fabs(np.min(self.get_w_x())))
+        return F_arr, np.array(w_list)
+
+    def reset(self):
+        self.theta_F = 0
 
     def get_Fw(self):
         theta_arr = np.linspace(0,1,41)
@@ -91,7 +110,6 @@ class DeflectionProfile(MQPProfile):
 
     def update_plot(self, axes):
         ax_M, ax_Q, ax_w, ax_k, ax_Fw = axes
-
         self.plot_MQ(ax_M, ax_Q)
 
         x = self.x
