@@ -3,7 +3,7 @@ import traits.api as tr
 import numpy as np
 from bmcs_utils.api import View, Item
 from bmcs_utils.api import Float, mpl_align_yaxis
-from bmcs_beam.beam_bc.mq_profile import MQPProfile
+from bmcs_beam.beam_config.mq_profile import MQPProfile
 from scipy.integrate import cumtrapz
 import matplotlib.gridspec as gridspec
 
@@ -118,13 +118,13 @@ class DeflectionProfile(MQPProfile):
         ax_k.fill(x, -kappa_x, color='gray', alpha=0.1)
         ax_k.set_ylabel(r'$\kappa [\mathrm{mm}^{-1}]$')
         ax_k.set_xlabel(r'$x$')
-        ax_k.legend();
+        ax_k.legend()
 
         w_x = self.get_w_x()
         ax_w.plot(x, w_x, color='blue', label='$w$ [mm]')
         ax_w.fill(x, w_x, color='blue', alpha=0.1)
         ax_w.set_ylabel(r'$w [\mathrm{mm}]$')
-        ax_w.legend();
+        ax_w.legend()
         mpl_align_yaxis(ax_w, 0, ax_k, 0)
 
         ax_Fw.set_xlabel(r'$w_\mathrm{max}$ [mm]')
