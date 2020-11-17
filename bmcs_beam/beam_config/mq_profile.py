@@ -3,7 +3,7 @@ import numpy as np
 import sympy as sp
 import traits.api as tr
 from bmcs_cross_section.mkappa import MKappa
-from bmcs_beam.beam_bc.boundary_conditions import BoundaryConditions
+from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions
 from bmcs_utils.api import InteractiveModel, \
     Item, View, Float, Int, FloatEditor, FloatRangeEditor, mpl_align_yaxis
 from matplotlib.patches import PathPatch
