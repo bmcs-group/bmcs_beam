@@ -2,7 +2,7 @@ import matplotlib.patches as mpatches
 import numpy as np
 import sympy as sp
 import traits.api as tr
-from bmcs_beam.beam_bc.beam_design import BeamDesign
+from bmcs_beam.beam_config.beam_design import BeamDesign
 from bmcs_utils.api import InteractiveModel, Item, View, Float, Int
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
