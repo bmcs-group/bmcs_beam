@@ -15,6 +15,11 @@ class BeamDesign(CSDesign):
         Item('L', latex='L \mathrm{[mm]}')
     )
 
+    def plot_reinforcement(self, ax):
+        L = self.L
+        for z in self.cross_section_layout.reinforcement.z_j:
+            ax.plot([0,L],[z,z], lw=2, color='brown')
+
     def xsubplots(self, fig):
         return fig.subplots(1, 1)
 
