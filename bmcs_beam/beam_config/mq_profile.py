@@ -84,6 +84,8 @@ class MQPProfile(InteractiveModel):
     def _get_x(self):
         return np.linspace(0, self.L, self.n_x)
 
+    # TODO[SR]: add the effect of self-weight to the M and Q
+
     def get_M_x(self):
         x, F, l = sp.symbols('x F l')
         M_ = self.conf_name.bending_moment().rewrite(sp.Piecewise)
