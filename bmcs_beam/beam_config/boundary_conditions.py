@@ -14,7 +14,7 @@ class BoundaryConditions(tr.HasTraits):
     # supports = tr.List
     name = 'homam'
     CONFIG_NAMES = ['3pb', '4pb', 'simple_beam_dist_load', '3span_dist_load',
-                  '3pb_fixed_support', '3pb_fixed_support', 'single_moment_example']
+                    '3pb_fixed_support', 'single_moment_example']
 
     @staticmethod
     def get_configured_beam(L, F, conf_name):
