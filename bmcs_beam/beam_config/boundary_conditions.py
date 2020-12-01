@@ -1,178 +1,118 @@
-import matplotlib.patches as mpatches
+from numbers import Number
+
 import numpy as np
 import sympy as sp
 import traits.api as tr
-from bmcs_beam.beam_config.beam_design import BeamDesign
-from bmcs_utils.api import InteractiveModel, Item, View, Float, Int
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from sympy.physics.continuum_mechanics.beam import Beam
+import matplotlib.patches as mpatches
 
 
-class BoundaryConditions(InteractiveModel):
+class BoundaryConditions(tr.HasTraits):
+    # loads = tr.List
+    # supports = tr.List
+    name = 'homam'
+    CONFIG_NAMES = ['3pb', '4pb', 'simple_beam_dist_load', '3span_dist_load',
+                  '3pb_fixed_support', '3pb_fixed_support', 'single_moment_example']
 
-    beam_design = tr.Instance(BeamDesign)
+    @staticmethod
+    def get_configured_beam(L, F, conf_name):
+        # imput beam should have a numerical length and has E and I as symbols, and have predefined supports
+        R1, R2, R3, R4, M1, M2 = sp.symbols('R1, R2, R3, R4, M1, M2')
+        E, I = sp.symbols('E, I')
+        beam = Beam(L, E, I)
+        if conf_name == BoundaryConditions.CONFIG_NAMES[0]:
+            # 3 point bending example
+            beam.apply_load(R1, 0, -1)
+            beam.apply_load(R2, L, -1)
+            beam.apply_load(F, L/2, -1)
+            beam.bc_deflection = [(0, 0), (L, 0)]
 
-    def _beam_design_default(self):
-        return BeamDesign()
+        elif conf_name == BoundaryConditions.CONFIG_NAMES[1]:
+            # 4 point bending example
+            beam.apply_load(R1, 0, -1)
+            beam.apply_load(R2, L, -1)
+            beam.apply_load(F, L / 3, -1)
+            beam.apply_load(F, 2 * L / 3, -1)
+            beam.bc_deflection = [(0, 0), (L, 0)]
 
-    name = 'Boundary Conditions'
+        elif conf_name == BoundaryConditions.CONFIG_NAMES[2]:
+            # distributed load simple beam example
+            beam.apply_load(R1, 0, -1)
+            beam.apply_load(R2, L, -1)
+            beam.apply_load(F, 0, 0)
+            beam.bc_deflection = [(0, 0), (L, 0)]
 
-    '''Temporary beam definition'''
-    # 3 point bending example
+        elif conf_name == BoundaryConditions.CONFIG_NAMES[3]:
+            # 3 span distributed load example
+            beam.apply_load(R1, 0, -1)
+            beam.apply_load(R2, L / 3, -1)
+            beam.apply_load(R3, 2 * L / 3, -1)
+            beam.apply_load(R4, L, -1)
+            beam.apply_load(F, 0, 0)
+            beam.bc_deflection = [(0, 0), (L / 3, 0), (2 * L / 3, 0), (L, 0)]
 
-    x, E, I, F = sp.symbols('x E I F')
-    l = sp.symbols('l', positive=True)  # the l sign
-    b3p = Beam(l, E, I)
-    R1, R2 = sp.symbols('R1 R2')
-    b3p.apply_load(R1, 0, -1)
-    b3p.apply_load(R2, l, -1)
-    b3p.apply_load(-F, l / 2, -1)
-    b3p.bc_deflection = [(0, 0), (l, 0)]
-    b3p.solve_for_reaction_loads(R1, R2)
+        elif conf_name == BoundaryConditions.CONFIG_NAMES[4]:
+            # fixed support example
+            beam.apply_load(R1, 0, -1)
+            beam.apply_load(M1, 0, -2)
+            beam.apply_load(R2, L, -1)
+            beam.apply_load(M2, L, -2)
+            beam.apply_load(F, L / 2, -1)
+            beam.bc_deflection = [(0, 0), (L, 0)]
+            beam.bc_slope = [(0, 0), (L, 0)]
 
-    # 4 point bending example
-    x, E, I, F = sp.symbols('x E I F')
-    l = sp.symbols('l', positive=True)
-    b4p = Beam(l, E, I)
-    R1, R2 = sp.symbols('R1  R2')
-    b4p.apply_load(R1, 0, -1)
-    b4p.apply_load(R2, l, -1)
-    b4p.apply_load(-F, l / 3, -1)
-    b4p.apply_load(-F, 2 * l / 3, -1)
-    b4p.bc_deflection = [(0, 0), (l, 0)]
-    b4p.solve_for_reaction_loads(R1, R2)
+        elif conf_name == BoundaryConditions.CONFIG_NAMES[5]:
+            # single moment example
+            beam.apply_load(R1, 0, -1)
+            beam.apply_load(R2, L, -1)
+            beam.apply_load(-F, L / 2, -2)
+            beam.bc_deflection = [(0, 0), (L, 0)]
 
-    # single moment example
-    x, E, I, F = sp.symbols('x E I F')
-    l = sp.symbols('l', positive=True)  # the l sign
-    bmo = Beam(l, E, I)
-    R1, R2 = sp.symbols('R1 R2')
-    bmo.apply_load(R1, 0, -1)
-    bmo.apply_load(R2, l, -1)
-    bmo.apply_load(F, l / 2, -2)
-    bmo.bc_deflection = [(0, 0), (l, 0)]
-    bmo.solve_for_reaction_loads(R1, R2)
+        return beam
 
-    # distrubuted load simple beam example
-    E, I, M, V = sp.symbols('E I M V')
-    bdi = Beam(l, E, I)
-    E, I, R1, R2 = sp.symbols('E I R1 R2')
-    bdi.apply_load(R1, 0, -1)
-    bdi.apply_load(R2, l, -1)
-    bdi.apply_load(-F, 0, 0)
-    bdi.bc_deflection = [(0, 0), (l, 0)]
-    bdi.solve_for_reaction_loads(R1, R2)
+    @staticmethod
+    def plot(ax, beam):
+        L = float(beam.length)
+        # ax.annotate('L = {} mm'.format(np.round(L), 0), xy=(L / 2, 5), color='black')
 
-    # 3 span distributed load example
-    x, E, I, F = sp.symbols('x E I F')
-    l = sp.symbols('l', positive=True)
-    b3s = Beam(l, E, I)
-    R1, R2, R3, R4 = sp.symbols('R1 R2 R3 R4')
-    b3s.apply_load(R1, 0, -1)
-    b3s.apply_load(R2, l / 3, -1)
-    b3s.apply_load(R3, 2 * l / 3, -1)
-    b3s.apply_load(R4, l, -1)
-    b3s.apply_load(-F, 0, 0)
-    b3s.bc_deflection = [(0, 0), (l / 3, 0), (2 * l / 3, 0), (l, 0)]
-    b3s.solve_for_reaction_loads(R1, R2, R3, R4)
-
-    # fixed support example
-    E, I, F = sp.symbols('E I F')
-    # l = sp.symbols('l', positive=True)
-    bf = Beam(l, E, I)
-    R1, R2 = sp.symbols('R1  R2')
-    M1, M2 = sp.symbols('M1, M2')
-    bf.apply_load(R1, 0, -1)
-    bf.apply_load(M1, 0, -2)
-    bf.apply_load(R2, l, -1)
-    bf.apply_load(M2, l, -2)
-    bf.apply_load(-F, l / 2, -1)
-    bf.bc_deflection = [(0, 0), (l, 0)]
-    bf.bc_slope = [(0, 0), (l, 0)]
-    bf.solve_for_reaction_loads(R1, R2, M1, M2)
-
-    # conf_name
-    conf_name = b3p  # beam configuration name
-
-    L = tr.DelegatesTo('beam_design')
-    H = tr.DelegatesTo('beam_design')
-
-    _GEO = tr.Event
-    @tr.on_trait_change('beam_design, +GEO, beam_design._GEO')
-    def _reset_GEO(self):
-        self._GEO = True
-
-
-    # L = tr.Int(5000, param=True, latex='L \mathrm{[mm]}', minmax=(1000, 10000))
-    # H = tr.Int(200, param=True, latex='H \mathrm{[mm]}', minmax=(10, 500))
-    f = Float(1000) #TODO solve the issue of l/L and f/F
-    n_sup = Int(2)
-    G_adj = Float(0.02)
-    F_pos = Int(2500)
-
-    ipw_view = View(
-        Item('f', latex='F \mathrm{[N]}', minmax=(1000, 10000)), # the name might be confusing
-        Item('n_sup', latex='n_{sup} \mathrm{[-]}', minmax=(2, 10)),  # number of supports
-        Item('G_adj', latex='G_{adj} \mathrm{[-]}', minmax=(1e-3, 1e-1)),  # Graphic adjustment factor
-        Item('F_pos', latex='F_{pos} \mathrm{[mm]}', minmax=(0, 10000)),  # Force position
-    )
-
-    def get_supports_loc(self):
-
-        # reading the position of the boundary conditions
-        loc_d_ = []
-        loc_s_ = []
-
-        for i in range(0, len(self.conf_name.bc_deflection)):
-            loc_d_.append(self.conf_name.bc_deflection[i][0])
-        for i in range(0, len(self.conf_name.bc_slope)):
-            loc_s_.append(self.conf_name.bc_slope[i][0])
-
-        loc_d = dict(list(enumerate(loc_d_)))  # boundary conditions with confined bending
-        loc_d_l_ = sp.lambdify((self.l), loc_d)
-        loc_d_l = (loc_d_l_(self.L))
-
-        loc_s = dict(list(enumerate(loc_s_)))  # boundary conditions with confined slope
-        loc_s_l_ = sp.lambdify((self.l), loc_s)
-        loc_s_l = (loc_s_l_(self.L))
-
-        return loc_d_l, loc_s_l
-
-    def subplots(self, fig):
-        return fig.subplots(1, 1)
-
-    def update_plot(self, ax):
-
-        # beam 
-        ax.fill([0, self.L, self.L, 0, 0], [0, 0, self.H, self.H, 0], color='gray')
-        #         ax.plot([0,self.L,self.L,0,0], [0,0,self.H,self.H,0],color='black')
+        # Beam
+        ax.plot([0, beam.length], [0, 0], linewidth=2, color='black')
 
         # supports
         vertices = []
         codes = []
 
-        for i in range(0, len((self.get_supports_loc()[0]))):
+        support_width = 0.02 * beam.length
+        support_line_distance = 1.3 * support_width
 
-            codes += [Path.MOVETO] + [Path.LINETO] * 2 + [Path.CLOSEPOLY]
-            vertices += [(self.get_supports_loc()[0][i] - self.L * (self.G_adj), -self.L * self.G_adj),
-                         (self.get_supports_loc()[0][i], 0),
-                         (self.get_supports_loc()[0][i] + self.L * (self.G_adj), -self.L * self.G_adj),
-                         (self.get_supports_loc()[0][i] - self.L * (self.G_adj), -self.L * self.G_adj)]
+        for i, deflection in enumerate(beam.bc_deflection):
+            x_loc, def_value = deflection
 
-            if self.get_supports_loc()[0][i] != 0:
-                codes += [Path.MOVETO] + [Path.LINETO] + [Path.CLOSEPOLY]
-                vertices += [(self.get_supports_loc()[0][i] + (self.L * self.G_adj), -self.L * self.G_adj * 1.2),
-                             (self.get_supports_loc()[0][i] - (self.L * self.G_adj), -self.L * self.G_adj * 1.2),
-                             (self.get_supports_loc()[0][i] - (self.L * self.G_adj), -self.L * self.G_adj * 1.2)]
+            # Makeing sure it's a support (deflection value is 0)
+            if def_value == 0:
+                # Draw the triangle of the support
+                codes += [Path.MOVETO, Path.LINETO, Path.LINETO, Path.CLOSEPOLY]
+                vertices += [(x_loc, 0),
+                             (x_loc + support_width / 2, -support_width),
+                             (x_loc - support_width / 2, -support_width),
+                             (x_loc, 0)]
 
-        for i in range(0, len((self.get_supports_loc()[1]))):
-            codes += [Path.MOVETO] + [Path.LINETO] * 3 + [Path.CLOSEPOLY]
-            vertices += [(self.get_supports_loc()[1][i] - self.L * (self.G_adj), -self.L * self.G_adj * 1.2),
-                         (self.get_supports_loc()[1][i] - self.L * (self.G_adj), self.H + self.L * self.G_adj * 1.2),
-                         (self.get_supports_loc()[1][i] + self.L * (self.G_adj), self.H + self.L * self.G_adj * 1.2),
-                         (self.get_supports_loc()[1][i] + self.L * (self.G_adj), -self.L * self.G_adj * 1.2),
-                         (self.get_supports_loc()[1][i] - self.L * (self.G_adj), -self.L * self.G_adj * 1.2)]
+                # Add line below the triangle for other supports
+                if i > 0:
+                    codes += [Path.MOVETO] + [Path.LINETO] + [Path.CLOSEPOLY]
+                    vertices += [(x_loc - support_width / 2, -support_line_distance),
+                                 (x_loc + support_width / 2, -support_line_distance),
+                                 (x_loc + support_width / 2, -support_line_distance)]
+
+        # for i in range(0, len((self.get_supports_loc()[1]))):
+        #     codes += [Path.MOVETO] + [Path.LINETO] * 3 + [Path.CLOSEPOLY]
+        #     vertices += [(self.get_supports_loc()[1][i] - L * (self.G_adj), -L * self.G_adj * 1.2),
+        #                  (self.get_supports_loc()[1][i] - L * (self.G_adj), self.H + L * self.G_adj * 1.2),
+        #                  (self.get_supports_loc()[1][i] + L * (self.G_adj), self.H + L * self.G_adj * 1.2),
+        #                  (self.get_supports_loc()[1][i] + L * (self.G_adj), -L * self.G_adj * 1.2),
+        #                  (self.get_supports_loc()[1][i] - L * (self.G_adj), -L * self.G_adj * 1.2)]
 
         vertices = np.array(vertices, float)
         path = Path(vertices, codes)
@@ -180,112 +120,150 @@ class BoundaryConditions(InteractiveModel):
         ax.add_patch(pathpatch)
 
         # loads
-        load = self.conf_name.applied_loads
+        load = beam.applied_loads
         value = [0]
         pos = [0]
         type = [0]
 
-        # reading the value and the positoin of external loads
-        for i in range(0, len(load)):
-            if load[i][0] == -self.F or load[i][0] == self.F:
-                value[0] = (load[i][0])
-                pos[0] = (load[i][1])
-                load_dic = dict(zip(value, pos))
-                load_ = sp.lambdify((self.F, self.l), load_dic)
-                Load_x = load_(self.f, self.L)
+        # reading the value and the position of external loads
+        for load in beam.applied_loads:
+            load_value = load[0]
+            if isinstance(load_value, Number):
+                load_value = float(load[0])
+                load_position = float(load[1])
+                load_type = float(load[2])
 
-                # load arrow parameters
-                x_tail = (list(Load_x.values())[0])
-                x_head = (list(Load_x.values())[0])
+                x_tail = load_position
+                x_head = load_position
 
-                # moment
-                if load[i][2] == -2:
+                # Point load
+                if load_type == -1:
+                    y_tail = L / 20
+                    y_head = 2.
+                    xy_annotate = (x_tail, y_tail)
 
-                    if load[i][0] == -self.F:
+                    if load_value == abs(load_value):
+                        y_tail = 2.
+                        y_head = L / 20
+                        xy_annotate = (x_head, y_head)
 
-                        ax.plot([(list(Load_x.values())[0])], [(self.H / 2)],
-                                marker=r'$\circlearrowleft$', ms=self.H / 5)
+                    arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
+                                                     color='blue', mutation_scale=L / 500)
+                    ax.annotate('{} KN'.format(round(load_value / 1000., 2)), xy=xy_annotate, color='black')
+                    ax.add_patch(arrow)
 
-                    else:
-
-                        ax.plot([(list(Load_x.values())[0])], [(self.H / 2)],
-                                marker=r'$\circlearrowright$', ms=self.H / 5)
-
-                    ax.annotate('{} KN.mm'.format(np.round(self.f / 1000), 0),
-                                xy=(list(Load_x.values())[0], self.H * 1.4), color='blue')
-
-                # point load   
-                elif load[i][2] == -1:
-
-                    if load[i][0] == -self.F:
-
-                        y_tail = self.L / 20 + self.H
-                        y_head = 0 + self.H
-                        dy = y_head + x_head / 10
-
-                        arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
-                                                         color='blue', mutation_scale=self.L / 500)
-                        ax.annotate('{} KN'.format(np.round(self.f / 1000), 0),
-                                    xy=(x_tail, y_tail), color='black')
-                        ax.add_patch(arrow)
-
-                    else:
-
-                        y_tail = 0 + self.H
-                        y_head = self.L / 20 + self.H
-                        dy = y_head + x_head / 10
-
-                        arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
-                                                         color='blue', mutation_scale=self.L / 500)
-                        ax.annotate('{} KN'.format(np.round(self.f / 1000), 0),
-                                    xy=(x_head, y_head), color='black')
-                        ax.add_patch(arrow)
-
-                else:
-
-                    if load[i][0] == -self.F:
-                        y_tail = self.L / 20 + self.H
-                        y_head = 0 + self.H
-                        dy = y_head + x_head / 10
-
-                        # distributed load
-                        l_step = 0
-                        while l_step <= self.L:
-                            x_tail = (list(Load_x.values())[0]) + l_step
-                            y_tail = self.L / 20 + self.H
-                            x_head = (list(Load_x.values())[0]) + l_step
-                            y_head = 0 + self.H
-                            dy = y_head + x_head / 10
-                            l_step += self.L / 10
-                            arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
-                                                             color='blue', mutation_scale=self.L / 500)
-                            ax.add_patch(arrow)
-
-                        ax.annotate('{} KN'.format(np.round(self.f / 1000), 0),
-                                    xy=(self.L / 2, y_tail * 1.1), color='black')
-                        ax.plot([0, self.L], [y_tail, y_tail], color='blue')
-
-                    else:
-                        y_tail = 0 + self.H
-                        y_head = self.L / 20 + self.H
-                        dy = y_head + x_head / 10
-
-                        # distributed load
-                        l_step = 0
-                        while l_step <= self.L:
-                            x_tail = (list(Load_x.values())[0]) + l_step
-                            y_tail = 0 + self.H
-                            x_head = (list(Load_x.values())[0]) + l_step
-                            y_head = self.L / 20 + self.H
-                            dy = y_head + x_head / 10
-                            l_step += self.L / 10
-                            arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
-                                                             color='blue', mutation_scale=self.L / 500)
-                            ax.add_patch(arrow)
-
-                        ax.annotate('{} KN'.format(np.round(self.f / 1000), 0),
-                                    xy=(self.L / 2, y_head * 1.1), color='black')
-                        ax.plot([0, self.L], [y_head, y_head], color='blue')
+        # for i in range(0, len(load)):
+        #     if load[i][0] == -self.F or load[i][0] == self.F:
+        #         value[0] = (load[i][0])
+        #         pos[0] = (load[i][1])
+        #         load_dic = dict(zip(value, pos))
+        #         load_ = sp.lambdify((self.F, L), load_dic)
+        #         Load_x = load_(self.f, L)
+        #
+        #         # load arrow parameters
+        #         x_tail = (list(Load_x.values())[0])
+        #         x_head = (list(Load_x.values())[0])
+        #
+        #         # moment
+        #         if load[i][2] == -2:
+        #
+        #             if load[i][0] == -self.F:
+        #
+        #                 ax.plot([(list(Load_x.values())[0])], [(self.H / 2)],
+        #                         marker=r'$\circlearrowleft$', ms=self.H / 5)
+        #
+        #             else:
+        #
+        #                 ax.plot([(list(Load_x.values())[0])], [(self.H / 2)],
+        #                         marker=r'$\circlearrowright$', ms=self.H / 5)
+        #
+        #             ax.annotate('{} KN.mm'.format(np.round(self.f / 1000), 0),
+        #                         xy=(list(Load_x.values())[0], self.H * 1.4), color='blue')
+        #
+        #         # point load
+        #         elif load[i][2] == -1:
+        #
+        #             if load[i][0] == -self.F:
+        #
+        #                 y_tail = L / 20 + self.H
+        #                 y_head = 0 + self.H
+        #                 dy = y_head + x_head / 10
+        #
+        #                 arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
+        #                                                  color='blue', mutation_scale=L / 500)
+        #                 ax.annotate('{} KN'.format(np.round(self.f / 1000), 0),
+        #                             xy=(x_tail, y_tail), color='black')
+        #                 ax.add_patch(arrow)
+        #
+        #             else:
+        #
+        #                 y_tail = 0 + self.H
+        #                 y_head = L / 20 + self.H
+        #                 dy = y_head + x_head / 10
+        #
+        #                 arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
+        #                                                  color='blue', mutation_scale=L / 500)
+        #                 ax.annotate('{} KN'.format(np.round(self.f / 1000), 0),
+        #                             xy=(x_head, y_head), color='black')
+        #                 ax.add_patch(arrow)
+        #
+        #         else:
+        #
+        #             if load[i][0] == -self.F:
+        #                 y_tail = L / 20 + self.H
+        #                 y_head = 0 + self.H
+        #                 dy = y_head + x_head / 10
+        #
+        #                 # distributed load
+        #                 l_step = 0
+        #                 while l_step <= L:
+        #                     x_tail = (list(Load_x.values())[0]) + l_step
+        #                     y_tail = L / 20 + self.H
+        #                     x_head = (list(Load_x.values())[0]) + l_step
+        #                     y_head = 0 + self.H
+        #                     dy = y_head + x_head / 10
+        #                     l_step += L / 10
+        #                     arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
+        #                                                      color='blue', mutation_scale=L / 500)
+        #                     ax.add_patch(arrow)
+        #
+        #                 ax.annotate('{} KN'.format(np.round(self.f / 1000), 0),
+        #                             xy=(L / 2, y_tail * 1.1), color='black')
+        #                 ax.plot([0, L], [y_tail, y_tail], color='blue')
+        #
+        #             else:
+        #                 y_tail = 0 + self.H
+        #                 y_head = L / 20 + self.H
+        #                 dy = y_head + x_head / 10
+        #
+        #                 # distributed load
+        #                 l_step = 0
+        #                 while l_step <= L:
+        #                     x_tail = (list(Load_x.values())[0]) + l_step
+        #                     y_tail = 0 + self.H
+        #                     x_head = (list(Load_x.values())[0]) + l_step
+        #                     y_head = L / 20 + self.H
+        #                     dy = y_head + x_head / 10
+        #                     l_step += L / 10
+        #                     arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
+        #                                                      color='blue', mutation_scale=L / 500)
+        #                     ax.add_patch(arrow)
+        #
+        #                 ax.annotate('{} KN'.format(np.round(self.f / 1000), 0),
+        #                             xy=(L / 2, y_head * 1.1), color='black')
+        #                 ax.plot([0, L], [y_head, y_head], color='blue')
 
         ax.axis('equal')
         ax.autoscale(tight=True)
+
+
+# class BoundaryCondition(tr.HasTraits):
+#     x_loc = tr.Float
+#
+#
+# class Support(BoundaryCondition):
+#     constrained_directions = tr.Tuple(0, 1)  # free on x and constrained on y
+#
+#
+# class Load(BoundaryCondition):
+#     value = tr.Float
