@@ -11,9 +11,9 @@ from numbers import Number
 
 class BeamDesign(InteractiveModel):
 
-    name = 'BeamDesign'
+    name = 'Beam Design'
 
-    cs_design = tr.Instance(CrossSectionDesign, ())
+    # cs_design = tr.Instance(CrossSectionDesign, ())
 
     n_x = Int(100)
     L = Float(5000)
