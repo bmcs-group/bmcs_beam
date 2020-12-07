@@ -117,6 +117,20 @@ class BeamDesign(CrossSectionDesign):
         ax3 = ax2.twinx()
         return ax1, ax2, ax3
 
+    # @todo: [HS] this limits the beam design object to just a MQ profile
+    # it is, however meant to be only useful for the deflection calculation.
+    # For the shear zone - the interface should be generalized and the
+    # beam design should provide more services, namely the access to
+    # all the components of the beam, draw the plan from the side view,
+    # cross sectional view - indeed the whole design including the supports
+    # and loading.
+    #
+    # An alternative is to declare this package just to a beam_statical_system
+    # which is purely 1D and not to call it design. Then a BeamDesign would
+    # contain both - beam_bc (a statical system) and cs_design. It would provide
+    # functionality to change the parameters of the design - including the
+    # length, load configuration and supports (BC in one word).
+    #
     def update_plot(self, axes):
         ax1, ax2, ax3 = axes
         BoundaryConditions.plot(ax1, self.beam)
