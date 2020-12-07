@@ -7,8 +7,6 @@ from bmcs_cross_section.mkappa import MKappa
 from scipy.integrate import cumtrapz
 import matplotlib.gridspec as gridspec
 
-from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions
-
 
 class DeflectionProfile(InteractiveModel):
     '''
@@ -36,17 +34,18 @@ class DeflectionProfile(InteractiveModel):
         '''
         Calculate the cross sectional rotation by integrating the curvature
         '''
-        # TODO rename phi to theta
         kappa_x = self.get_kappa_x()
-        # Kappa = 1/R = d_phi/d_x
         phi_x = cumtrapz(kappa_x, self.beam_design.x, initial=0)
         # resolve the integration constant by requiring zero curvature
         # at the midspan of the beam
         # TODO [SD] this is specific to 3 point bending - generalize
         #           for other loading conditions.
-        #           HS: I guess this works for 4pb too
         phi_L2 = np.interp(self.beam_design.L / 2, self.beam_design.x, phi_x)
-        phi_x -= phi_L2
+
+        if self.beam_design.beam_conf_name == '3pb':
+            phi_x -= phi_L2
+        elif self.beam_design.beam_conf_name == '4pb':
+            phi_x -= phi_L2
         return phi_x
 
     def get_w_x(self):
@@ -59,8 +58,10 @@ class DeflectionProfile(InteractiveModel):
         # at the left support - the right one comes automatically
         # TODO [SR, HS] this is specific to 3 point bending - generalize
         #           for other loading conditions.
-        #           HS: I guess this works for 4pb too
-        w_x += w_x[0]
+        if self.beam_design.beam_conf_name == '3pb':
+            w_x += w_x[0]
+        elif self.beam_design.beam_conf_name == '4pb':
+            w_x += w_x[0]
         return w_x
 
     theta_max = tr.Float(1)
@@ -76,13 +77,14 @@ class DeflectionProfile(InteractiveModel):
         # TODO [SR, HS] this is specific to 3 point bending - generalize
         #           for other loading conditions.
         M_I, kappa_I = self.mc.inv_M_kappa
-        if self.beam_design.beam_conf_name == BoundaryConditions.CONFIG_NAMES[0]:
-            F_max = 4 * M_I[-1] / self.beam_design.L
-        elif self.beam_design.beam_conf_name == BoundaryConditions.CONFIG_NAMES[1]:
-            # TODO: this distance should be like the one defined in BoundaryConditions
-            distance_from_support_until_first_load = self.beam_design.L/3
-            F_max = M_I[-1] / distance_from_support_until_first_load
-        return F_max
+
+        if self.beam_design.beam_conf_name == '3pb':
+            F_Max_ = 4 * M_I[-1] / self.beam_design.L
+    
+        elif self.beam_design.beam_conf_name == '4pb':
+            F_Max_ = 4 * M_I[-1] / self.beam_design.L
+
+        return F_Max_
 
     # def run(self):
     #     F_arr = np.linspace(0, self.F_max, self.n_load_steps)

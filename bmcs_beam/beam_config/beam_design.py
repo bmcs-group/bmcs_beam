@@ -8,9 +8,10 @@ import sympy as sp
 import numpy as np
 from numbers import Number
 
+# Quick fix for [bmcs_shear_zone]
+class BeamDesign(CrossSectionDesign):
 
-class BeamDesign(InteractiveModel):
-
+# class BeamDesign(InteractiveModel):
     name = 'Beam Design'
 
     # cs_design = tr.Instance(CrossSectionDesign, ())
@@ -132,3 +133,8 @@ class BeamDesign(InteractiveModel):
         ax1.axis('equal')
         ax1.autoscale(tight=True)
 
+    # Quick fix: needed for [bmcs_shear_zone]
+    def plot_reinforcement(self, ax):
+        L = self.L
+        for z in self.cross_section_layout.reinforcement.z_j:
+            ax.plot([0,L],[z,z], lw=2, color='brown')
