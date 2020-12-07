@@ -140,9 +140,12 @@ class DeflectionProfile(InteractiveModel):
 
     def update_plot(self, axes):
         ax_w, ax_k, ax_Fw = axes
+        self.plot_force_displacement(ax_Fw)
+        self.plot_curvature(ax_k)
+        self.plot_displacement(ax_w)
+        mpl_align_yaxis(ax_w, 0, ax_k, 0)
 
-        x = self.beam_design.x
-
+    def plot_force_displacement(self, ax_Fw):
         F_scale = 1000
 
         # TODO: expensive calculations for all displacements are running with each plot update to produce new
@@ -155,6 +158,8 @@ class DeflectionProfile(InteractiveModel):
         ax_Fw.axhline(y=current_F, color='r')
         ax_Fw.annotate('F = {} kN'.format(current_F), xy=(0, current_F + 3), color='r')
 
+    def plot_curvature(self, ax_k):
+        x = self.beam_design.x
         kappa_x = self.get_kappa_x()  # self.mc.get_kappa(M)
         ax_k.plot(x, -kappa_x, color='black', label='$kappa$ [-]')
         ax_k.fill(x, -kappa_x, color='gray', alpha=0.1)
@@ -162,9 +167,10 @@ class DeflectionProfile(InteractiveModel):
         ax_k.set_xlabel(r'$x$')
         ax_k.legend()
 
+    def plot_displacement(self, ax_w):
+        x = self.beam_design.x
         w_x = self.get_w_x()
         ax_w.plot(x, w_x, color='blue', label='$w$ [mm]')
         ax_w.fill(x, w_x, color='blue', alpha=0.1)
         ax_w.set_ylabel(r'$w [\mathrm{mm}]$')
         ax_w.legend(loc='lower right')
-        mpl_align_yaxis(ax_w, 0, ax_k, 0)
