@@ -61,6 +61,11 @@ class BeamDesign(CrossSectionDesign):
     )
 
     def solve_beam_for_reactions(self):
+        # TODO: fix this
+        #  The following is a quick fix in order for 4pb to work, without it the self.beam is somehow corrupted after
+        #  using the function get_Fw() in DeflectionProfile so it's not able to solve the beam for 4pb!
+        self.beam = BoundaryConditions.get_configured_beam(self.L, self.F, self.beam_conf_name)
+
         reactions_names = []
 
         for load in self.beam.applied_loads:
