@@ -45,15 +45,14 @@ class TimeDependentCrackingExpr(bu.SymbExpr):
 
     E_cm_28 = sp.Symbol("E_cm28", positive=True)
     E_cm_t = (f_cm_t / f_cm_28) ** 0.3 * E_cm_28
+    dot_E_cm_t = E_cm_t.diff(t)
 
     alpha = sp.Symbol("alpha", positive=True)
     eps_eff_t = -alpha * T_max_t
     dot_eps_eff_t = -alpha * dot_T_max_t
 
     sig_t = E_cm_t * eps_eff_t
-    dot_sig_t = E_cm_t * dot_eps_eff_t
-
-    eq_crack_t = sig_t - f_ctm_t
+    dot_sig_t = sp.simplify(E_cm_t * dot_eps_eff_t) #  + dot_E_cm_t * eps_eff_t)
 
     symb_model_params = ['T_max', 't_argmax_T', 'T_m',
                          's', 'f_cm_28', 'f_ctm', 'alpha_f',
@@ -65,8 +64,7 @@ class TimeDependentCrackingExpr(bu.SymbExpr):
         ('f_ctm_t', ('t',)),
         ('E_cm_t', ('t',)),
         ('sig_t', ('t',)),
-        ('dot_sig_t', ('t',)),
-        ('eq_crack_t', ('t',))
+        ('dot_sig_t', ('t',))
     ]
 
 class TimeDependentCracking(bu.InteractiveModel,bu.InjectSymbExpr):
