@@ -1,7 +1,8 @@
-
 import traits.api as tr
 import numpy as np
 from bmcs_utils.api import InteractiveModel, View, Item, Button, ButtonEditor, Float, Int, mpl_align_yaxis
+from bmcs_utils.mpl_utils import mpl_align_xaxis
+
 from bmcs_beam.beam_config.beam_design import BeamDesign
 from bmcs_cross_section.mkappa import MKappa
 from scipy.integrate import cumtrapz
@@ -174,3 +175,13 @@ class DeflectionProfile(InteractiveModel):
         ax_w.fill(x, w_x, color='blue', alpha=0.1)
         ax_w.set_ylabel(r'$w [\mathrm{mm}]$')
         ax_w.legend(loc='lower right')
+
+    def plot_fw(self, ax_Fw):
+        F_scale = 1000
+
+        # TODO: expensive calculations for all displacements are running with each plot update to produce new
+        #  load-displacement curve, this shouldn't be done for example when only the force has changed
+        ax_Fw.set_xlabel(r'$w_\mathrm{max}$ [mm]')
+        ax_Fw.set_ylabel(r'$F$ [kN]')
+        F, w = self.get_Fw()
+        ax_Fw.plot(w, F / F_scale, color='blue', label = 'bmcs_deflection', lw=2)
