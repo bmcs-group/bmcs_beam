@@ -36,7 +36,7 @@ class BoundaryConditions(tr.HasTraits):
             beam.apply_load(F, L / 3, -1)
             beam.apply_load(F, 2 * L / 3, -1)
             beam.bc_deflection = [(0, 0), (L, 0)]
-
+            
         elif conf_name == BoundaryConditions.CONFIG_NAMES[2]:
             # distributed load simple beam example
             beam.apply_load(R1, 0, -1)
