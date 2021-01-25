@@ -2,7 +2,7 @@ import traits.api as tr
 from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions, BoundaryConfig
 from bmcs_cross_section.cs_design import CrossSectionDesign
 from bmcs_utils.api import InteractiveModel, \
-    Int, Item, View, Float, Range, Enum, Button, ButtonEditor, mpl_align_yaxis, FloatRangeEditor, EnumEditor
+    Int, Item, View, Float, Range, Button, ButtonEditor, mpl_align_yaxis, FloatRangeEditor
 from sympy.physics.continuum_mechanics.beam import Beam
 import sympy as sp
 import numpy as np
@@ -22,6 +22,9 @@ class BeamDesign(CrossSectionDesign):
     # TODO [HS]: make the conf a dropdown menu when the implementation is done by [RC]
     beam_conf_name = BoundaryConfig.THREE_PB
     beam_conf_name_slider = Range(0.)
+
+    # beam_configs = BoundaryConfig
+    # beam_conf = Enum(values='')
 
     beam = tr.Instance(Beam)
 
@@ -57,7 +60,8 @@ class BeamDesign(CrossSectionDesign):
         Item('F', latex='F \mathrm{[N]}'),
         Item('n_x', latex='n_x'),
         Item('beam_conf_name_slider', editor=FloatRangeEditor(label='Beam config', n_steps=5, low=0, high=5)),
-         # Item('add_force_btn', editor=ButtonEditor(label='Force', icon='plus'))
+        # Item('beam_conf', editor=EnumEditor(label='Beam config', options_tuple_list=beam_configs)),
+        # Item('add_force_btn', editor=ButtonEditor(label='Force', icon='plus'))
     )
 
     def solve_beam_for_reactions(self):
