@@ -8,28 +8,32 @@ from matplotlib.path import Path
 from sympy.physics.continuum_mechanics.beam import Beam
 import matplotlib.patches as mpatches
 
+import enum
+
+
+class BoundaryConfig(enum.Enum):
+    THREE_PB, FOUR_PB, SIMPLE_BEAM_DIST_LOAD, THREE_SPAN_DIST_LOAD, THREE_PB_FIXED_SUPPORT, SINGLE_MOMENT = range(6)
+
 
 class BoundaryConditions(tr.HasTraits):
     # loads = tr.List
     # supports = tr.List
-    name = 'homam'
-    CONFIG_NAMES = ['3pb', '4pb', 'simple_beam_dist_load', '3span_dist_load',
-                    '3pb_fixed_support', 'single_moment_example']
+    name = 'BoundaryConditions'
 
     @staticmethod
-    def get_configured_beam(L, F, conf_name):
+    def get_configured_beam(L, F, config):
         # imput beam should have a numerical length and has E and I as symbols, and have predefined supports
         R1, R2, R3, R4, M1, M2 = sp.symbols('R1, R2, R3, R4, M1, M2')
         E, I = sp.symbols('E, I')
         beam = Beam(L, E, I)
-        if conf_name == BoundaryConditions.CONFIG_NAMES[0]:
+        if config == BoundaryConfig.THREE_PB:
             # 3 point bending example
             beam.apply_load(R1, 0, -1)
             beam.apply_load(R2, L, -1)
             beam.apply_load(F, L/2, -1)
             beam.bc_deflection = [(0, 0), (L, 0)]
 
-        elif conf_name == BoundaryConditions.CONFIG_NAMES[1]:
+        elif config == BoundaryConfig.FOUR_PB:
             # 4 point bending example
             beam.apply_load(R1, 0, -1)
             beam.apply_load(R2, L, -1)
@@ -37,14 +41,14 @@ class BoundaryConditions(tr.HasTraits):
             beam.apply_load(F, 2 * L / 3, -1)
             beam.bc_deflection = [(0, 0), (L, 0)]
             
-        elif conf_name == BoundaryConditions.CONFIG_NAMES[2]:
+        elif config == BoundaryConfig.SIMPLE_BEAM_DIST_LOAD:
             # distributed load simple beam example
             beam.apply_load(R1, 0, -1)
             beam.apply_load(R2, L, -1)
             beam.apply_load(F, 0, 0)
             beam.bc_deflection = [(0, 0), (L, 0)]
 
-        elif conf_name == BoundaryConditions.CONFIG_NAMES[3]:
+        elif config == BoundaryConfig.THREE_SPAN_DIST_LOAD:
             # 3 span distributed load example
             beam.apply_load(R1, 0, -1)
             beam.apply_load(R2, L / 3, -1)
@@ -53,7 +57,7 @@ class BoundaryConditions(tr.HasTraits):
             beam.apply_load(F, 0, 0)
             beam.bc_deflection = [(0, 0), (L / 3, 0), (2 * L / 3, 0), (L, 0)]
 
-        elif conf_name == BoundaryConditions.CONFIG_NAMES[4]:
+        elif config == BoundaryConfig.THREE_PB_FIXED_SUPPORT:
             # fixed support example
             beam.apply_load(R1, 0, -1)
             beam.apply_load(M1, 0, -2)
@@ -63,7 +67,7 @@ class BoundaryConditions(tr.HasTraits):
             beam.bc_deflection = [(0, 0), (L, 0)]
             beam.bc_slope = [(0, 0), (L, 0)]
 
-        elif conf_name == BoundaryConditions.CONFIG_NAMES[5]:
+        elif config == BoundaryConfig.SINGLE_MOMENT:
             # single moment example
             beam.apply_load(R1, 0, -1)
             beam.apply_load(R2, L, -1)
