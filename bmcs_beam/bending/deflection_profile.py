@@ -8,7 +8,7 @@ from bmcs_cross_section.mkappa import MKappa
 from scipy.integrate import cumtrapz
 import matplotlib.gridspec as gridspec
 
-from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions
+from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions, BoundaryConfig
 
 
 class DeflectionProfile(InteractiveModel):
@@ -77,9 +77,9 @@ class DeflectionProfile(InteractiveModel):
         # TODO [SR, HS] this is specific to 3 point bending - generalize
         #           for other loading conditions.
         M_I, kappa_I = self.mc.inv_M_kappa
-        if self.beam_design.beam_conf_name == BoundaryConditions.CONFIG_NAMES[0]:
+        if self.beam_design.beam_conf_name == BoundaryConfig.THREE_PB:
             F_max = 4 * M_I[-1] / self.beam_design.L
-        elif self.beam_design.beam_conf_name == BoundaryConditions.CONFIG_NAMES[1]:
+        elif self.beam_design.beam_conf_name == BoundaryConfig.FOUR_PB:
             # TODO: this distance should be like the one defined in BoundaryConditions
             distance_from_support_until_first_load = self.beam_design.L/3
             F_max = M_I[-1] / distance_from_support_until_first_load
