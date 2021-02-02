@@ -45,7 +45,7 @@ class DeflectionProfile(InteractiveModel):
         # at the midspan of the beam
         # TODO [SD] this is specific to 3 point bending - generalize
         #           for other loading conditions.
-        #           HS: I guess this works for 4pb too
+        #           HS: I guess this works for 4pb too (for symmetric beams)
         phi_L2 = np.interp(self.beam_design.L / 2, self.beam_design.x, phi_x)
         phi_x -= phi_L2
         return phi_x
@@ -60,7 +60,7 @@ class DeflectionProfile(InteractiveModel):
         # at the left support - the right one comes automatically
         # TODO [SR, HS] this is specific to 3 point bending - generalize
         #           for other loading conditions.
-        #           HS: I guess this works for 4pb too
+        #           HS: I guess this works for 4pb too (for symmetric beams)
         w_x += w_x[0]
         return w_x
 
@@ -80,9 +80,10 @@ class DeflectionProfile(InteractiveModel):
         if self.beam_design.beam_conf_name == BoundaryConfig.THREE_PB:
             F_max = 4 * M_I[-1] / self.beam_design.L
         elif self.beam_design.beam_conf_name == BoundaryConfig.FOUR_PB:
-            # TODO: this distance should be like the one defined in BoundaryConditions
-            distance_from_support_until_first_load = self.beam_design.L/3
-            F_max = M_I[-1] / distance_from_support_until_first_load
+            load_distance = self.beam_design.beam_conf_name.first_load_distance
+            if load_distance == 0:
+                load_distance = self.beam_design.L / 3
+            F_max = M_I[-1] / load_distance
         return F_max
 
     # def run(self):
