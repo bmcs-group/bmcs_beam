@@ -10,9 +10,15 @@ import matplotlib.patches as mpatches
 
 import enum
 
+# class BoundaryConfigSettings:
+#     pass
 
 class BoundaryConfig(enum.Enum):
+    # The following should be provided as sub classes with possible settings change and get moment ability
     THREE_PB, FOUR_PB, SIMPLE_BEAM_DIST_LOAD, THREE_SPAN_DIST_LOAD, THREE_PB_FIXED_SUPPORT, SINGLE_MOMENT = range(6)
+
+    first_load_distance = 0
+    # settings = BoundaryConfigSettings()
 
 
 class BoundaryConditions(tr.HasTraits):
@@ -35,10 +41,13 @@ class BoundaryConditions(tr.HasTraits):
 
         elif config == BoundaryConfig.FOUR_PB:
             # 4 point bending example
+            load_distance = config.first_load_distance
+            if load_distance == 0:
+                load_distance = L/3
             beam.apply_load(R1, 0, -1)
             beam.apply_load(R2, L, -1)
-            beam.apply_load(F, L / 3, -1)
-            beam.apply_load(F, 2 * L / 3, -1)
+            beam.apply_load(F, load_distance, -1)
+            beam.apply_load(F, L - load_distance, -1)
             beam.bc_deflection = [(0, 0), (L, 0)]
             
         elif config == BoundaryConfig.SIMPLE_BEAM_DIST_LOAD:
