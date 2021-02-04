@@ -84,6 +84,8 @@ class DeflectionProfile(InteractiveModel):
             if load_distance == 0:
                 load_distance = self.beam_design.L / 3
             F_max = M_I[-1] / load_distance
+        elif self.beam_design.beam_conf_name == BoundaryConfig.SIMPLE_BEAM_DIST_LOAD:
+            F_max = 8 * M_I[-1] / self.beam_design.L**2
         return F_max
 
     # def run(self):
@@ -148,15 +150,14 @@ class DeflectionProfile(InteractiveModel):
         mpl_align_yaxis(ax_w, 0, ax_k, 0)
 
     def plot_force_displacement(self, ax_Fw):
-        F_scale = 1000
 
         # TODO: expensive calculations for all displacements are running with each plot update to produce new
         #  load-displacement curve, this shouldn't be done for example when only the force has changed
         ax_Fw.set_xlabel(r'$w_\mathrm{max}$ [mm]')
         ax_Fw.set_ylabel(r'$F$ [kN]')
         F, w = self.get_Fw()
-        ax_Fw.plot(w, F / F_scale, color='blue', lw=2)
-        current_F = round(abs(self.beam_design.F / F_scale), 2)
+        ax_Fw.plot(w, self.F_scale * F , color='blue', lw=2)
+        current_F = round(abs(self.F_scale * self.beam_design.F), 2)
         ax_Fw.axhline(y=current_F, color='r')
         ax_Fw.annotate('F = {} kN'.format(current_F), xy=(0, current_F + 3), color='r')
 
@@ -177,14 +178,15 @@ class DeflectionProfile(InteractiveModel):
         ax_w.set_ylabel(r'$w [\mathrm{mm}]$')
         ax_w.legend(loc='lower right')
 
+    F_scale = tr.Float(1/1000)
+
     def plot_fw(self, ax_Fw):
-        F_scale = 1000
         # TODO: expensive calculations for all displacements are running with each plot update to produce new
         #  load-displacement curve, this shouldn't be done for example when only the force has changed
         ax_Fw.set_xlabel(r'$w_\mathrm{max}$ [mm]')
         ax_Fw.set_ylabel(r'$F$ [kN]')
         F, w = self.get_Fw()
-        ax_Fw.plot(w, F / F_scale, label = 'bmcs_deflection', lw=2)
+        ax_Fw.plot(w, self.F_scale * F,  label = 'bmcs_deflection', lw=2)
         
     def plot_fw_par(self, ax_Fw, param_name, value):
         '''This plotting function has been used in the parametric study'''
@@ -196,14 +198,13 @@ class DeflectionProfile(InteractiveModel):
 #         ax.plot(w_val, f_val, c= 'black', label= 'Experiment', linestyle='-')
         
         #Plotting the variations
-        F_scale = 1000
         # TODO: expensive calculations for all displacements are running with each plot update to produce new
         #  load-displacement curve, this shouldn't be done for example when only the force has changed
         ax_Fw.set_xlabel(r'$w_\mathrm{max}$ [mm]')
         ax_Fw.set_ylabel(r'$F$ [kN]')
         F, w = self.get_Fw()
         # TODO: save F and w
-        ax_Fw.plot(w, F / F_scale, label = param_name+'='+ str(value) , lw=2)
+        ax_Fw.plot(w, self.F_scale * F, label = param_name+'='+ str(value) , lw=2)
         ax_Fw.set_title(param_name)
         ax_Fw.legend()
 
