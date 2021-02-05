@@ -1,1 +1,2 @@
-from bmcs_beam.beam_design import BeamDesign
+from bmcs_beam.beam_config.beam_design import BeamDesign
+from bmcs_beam.bending.deflection_profile import LoadDeflectionParamsStudy

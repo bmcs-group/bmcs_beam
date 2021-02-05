@@ -1,6 +1,7 @@
 import traits.api as tr
 import numpy as np
-from bmcs_utils.api import InteractiveModel, View, Item, Button, ButtonEditor, Float, Int, mpl_align_yaxis
+from bmcs_utils.api import InteractiveModel, View, Item, Button, ButtonEditor, Float, Int, \
+    mpl_align_yaxis, ParametricStudy
 from bmcs_utils.mpl_utils import mpl_align_xaxis
 
 from bmcs_beam.beam_config.beam_design import BeamDesign
@@ -144,24 +145,18 @@ class DeflectionProfile(InteractiveModel):
 
     def update_plot(self, axes):
         ax_w, ax_k, ax_Fw = axes
-        self.plot_force_displacement(ax_Fw)
-        self.plot_curvature(ax_k)
-        self.plot_displacement(ax_w)
+        self.plot_fw_with_fmax(ax_Fw)
+        self.plot_curvature_along_beam(ax_k)
+        self.plot_displacement_along_beam(ax_w)
         mpl_align_yaxis(ax_w, 0, ax_k, 0)
 
-    def plot_force_displacement(self, ax_Fw):
-
-        # TODO: expensive calculations for all displacements are running with each plot update to produce new
-        #  load-displacement curve, this shouldn't be done for example when only the force has changed
-        ax_Fw.set_xlabel(r'$w_\mathrm{max}$ [mm]')
-        ax_Fw.set_ylabel(r'$F$ [kN]')
-        F, w = self.get_Fw()
-        ax_Fw.plot(w, self.F_scale * F , color='blue', lw=2)
+    def plot_fw_with_fmax(self, ax_Fw):
+        self.plot_fw(ax_Fw)
         current_F = round(abs(self.F_scale * self.beam_design.F), 2)
         ax_Fw.axhline(y=current_F, color='r')
         ax_Fw.annotate('F = {} kN'.format(current_F), xy=(0, current_F + 3), color='r')
 
-    def plot_curvature(self, ax_k):
+    def plot_curvature_along_beam(self, ax_k):
         x = self.beam_design.x
         kappa_x = self.get_kappa_x()  # self.mc.get_kappa(M)
         ax_k.plot(x, -kappa_x, color='black', label='$kappa$ [-]')
@@ -170,7 +165,7 @@ class DeflectionProfile(InteractiveModel):
         ax_k.set_xlabel(r'$x$')
         ax_k.legend()
 
-    def plot_displacement(self, ax_w):
+    def plot_displacement_along_beam(self, ax_w):
         x = self.beam_design.x
         w_x = self.get_w_x()
         ax_w.plot(x, w_x, color='blue', label='$w$ [mm]')
@@ -186,26 +181,18 @@ class DeflectionProfile(InteractiveModel):
         ax_Fw.set_xlabel(r'$w_\mathrm{max}$ [mm]')
         ax_Fw.set_ylabel(r'$F$ [kN]')
         F, w = self.get_Fw()
-        ax_Fw.plot(w, self.F_scale * F,  label = 'bmcs_deflection', lw=2)
-        
-    def plot_fw_par(self, ax_Fw, param_name, value):
-        '''This plotting function has been used in the parametric study'''
-        
-        # Plotting the validated curve
-#         w_val = validated_data[0]
-#         f_val = validated_data[1]
-#         dp.plot_fw(ax)
-#         ax.plot(w_val, f_val, c= 'black', label= 'Experiment', linestyle='-')
-        
-        #Plotting the variations
-        # TODO: expensive calculations for all displacements are running with each plot update to produce new
-        #  load-displacement curve, this shouldn't be done for example when only the force has changed
-        ax_Fw.set_xlabel(r'$w_\mathrm{max}$ [mm]')
-        ax_Fw.set_ylabel(r'$F$ [kN]')
-        F, w = self.get_Fw()
-        # TODO: save F and w
-        ax_Fw.plot(w, self.F_scale * F, label = param_name+'='+ str(value) , lw=2)
-        ax_Fw.set_title(param_name)
-        ax_Fw.legend()
+        ax_Fw.plot(w, self.F_scale * F,  label='sim deflection', lw=2)
 
 
+class LoadDeflectionParamsStudy(ParametricStudy):
+
+    def __init__(self, dp):
+        self.dp = dp
+
+    def plot(self, ax, param_name, value):
+        ax.set_xlabel(r'$w_\mathrm{max}$ [mm]')
+        ax.set_ylabel(r'$F$ [kN]')
+        F, w = self.dp.get_Fw()
+        ax.plot(w, self.dp.F_scale * F, label=param_name + '=' + str(value), lw=2)
+        ax.set_title(param_name)
+        ax.legend()
