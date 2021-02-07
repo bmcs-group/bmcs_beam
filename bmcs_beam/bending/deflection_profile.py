@@ -85,6 +85,8 @@ class DeflectionProfile(InteractiveModel):
                 load_distance = self.beam_design.L / 3
             F_max = M_I[-1] / load_distance
         return F_max
+    
+    
 
     # def run(self):
     #     F_arr = np.linspace(0, self.F_max, self.n_load_steps)
@@ -130,6 +132,33 @@ class DeflectionProfile(InteractiveModel):
             self.beam_design.F = original_F
         self.F_max_old = F_max
         return F_arr, np.array(w_list)
+    
+    def get_Fw_inx(self, inx):
+        F_max = self.F_max
+        F_arr = np.linspace(0, F_max, self.n_load_steps)
+        w_list = []
+        # @todo [SR,RC]: separate the slider theta_F from the calculation
+        #                of the datapoints load deflection curve.
+        #                use broadcasting in the functions
+        #                get_M_x(x[:,np.newaxis], F[np.newaxis,:] and
+        #                in get_Q_x, get_kappa_x, get_w_x, get_phi_x, get_w_x
+        #                then, the browsing through the history is done within
+        #                the two dimensional array of and now loop over theta is
+        #                neeeded then. Theta works just as a slider - as originally
+        #                introduced.
+        original_F = self.beam_design.F
+        for F in F_arr:
+            if F == 0:
+                w_list.append(0)
+            else:
+                self.beam_design.F = -F
+                # Append the maximum deflection value that corresponds to the new load (F)
+                w_list.append(np.fabs(self.get_w_x()[inx]))
+        if self.F_max_old == F_max:
+            self.beam_design.F = original_F
+        self.F_max_old = F_max
+        return F_arr, np.array(w_list)
+    
 
     def subplots(self, fig):
         gs = gridspec.GridSpec(1, 2, figure=fig, width_ratios=[0.7, 0.3])
