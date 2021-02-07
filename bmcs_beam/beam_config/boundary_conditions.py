@@ -17,7 +17,9 @@ class BoundaryConfig(enum.Enum):
     # The following should be provided as sub classes with possible settings change and get moment ability
     THREE_PB, FOUR_PB, SIMPLE_BEAM_DIST_LOAD, THREE_SPAN_DIST_LOAD, THREE_PB_FIXED_SUPPORT, SINGLE_MOMENT = range(6)
 
+    # TODO [HS] This is not initialized when any of the above enums are created, fix this
     first_load_distance = 0
+
     # settings = BoundaryConfigSettings()
 
 
