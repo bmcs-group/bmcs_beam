@@ -8,13 +8,9 @@ import sympy as sp
 import numpy as np
 from numbers import Number
 
-# Quick fix for [bmcs_shear_zone]
 class BeamDesign(CrossSectionDesign):
 
-# class BeamDesign(InteractiveModel):
     name = 'Beam Design'
-
-    # cs_design = tr.Instance(CrossSectionDesign, ())
 
     n_x = Int(100)
     L = Float(5000)

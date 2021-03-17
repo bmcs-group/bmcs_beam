@@ -20,8 +20,8 @@ class DeflectionProfile(InteractiveModel):
 
     name = 'Deflection Profile'
 
-    beam_design = tr.Instance(BeamDesign, ())
-    mc = tr.Instance(MKappa, ())
+    beam_design = tr.Instance(BeamDesign, (), tree=True)
+    mc = tr.Instance(MKappa, (), tree=True)
     n_load_steps = Int(31)
 
     ipw_view = View(
