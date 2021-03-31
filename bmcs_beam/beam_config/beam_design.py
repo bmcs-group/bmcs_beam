@@ -24,6 +24,8 @@ class BeamDesign(CrossSectionDesign):
 
     beam = tr.Instance(Beam)
 
+    tree = []
+
     def _beam_default(self):
         return BoundaryConditions.get_configured_beam(self.L, self.F, self.beam_conf_name)
 

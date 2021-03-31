@@ -1,7 +1,7 @@
 import traits.api as tr
 import numpy as np
 
-from bmcs_utils.api import InteractiveModel, View, Item, Button, ButtonEditor, Float, Int, \
+from bmcs_utils.api import Model, View, Item, Button, ButtonEditor, Float, Int, \
     mpl_align_yaxis, ParametricStudy
 from bmcs_utils.mpl_utils import mpl_align_xaxis
 
@@ -13,16 +13,18 @@ import matplotlib.gridspec as gridspec
 from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions, BoundaryConfig
 
 
-class DeflectionProfile(InteractiveModel):
+class DeflectionProfile(Model):
     '''
     Deflection model of a BMCS beam
     '''
 
     name = 'Deflection Profile'
 
-    beam_design = tr.Instance(BeamDesign, (), tree=True)
-    mc = tr.Instance(MKappa, (), tree=True)
+    beam_design = tr.Instance(BeamDesign, ())
+    mc = tr.Instance(MKappa, ())
     n_load_steps = Int(31)
+
+    tree = ['beam_design','mc']
 
     ipw_view = View(
         Item('n_load_steps', latex='n_{\mathrm{load~steps}}')
