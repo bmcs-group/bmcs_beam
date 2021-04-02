@@ -3,6 +3,9 @@ import numpy as np
 
 from bmcs_utils.api import InteractiveModel, View, Item, Button, ButtonEditor, Float, Int, \
     mpl_align_yaxis_to_zero, mpl_show_one_legend_for_twin_axes, ParametricStudy
+from bmcs_utils.api import Model, View, Item, Button, ButtonEditor, Float, Int, \
+    mpl_align_yaxis, ParametricStudy
+from bmcs_utils.mpl_utils import mpl_align_xaxis
 
 from bmcs_beam.beam_config.beam_design import BeamDesign
 from bmcs_cross_section.mkappa import MKappa
@@ -12,7 +15,7 @@ import matplotlib.gridspec as gridspec
 from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions, BoundaryConfig
 
 
-class DeflectionProfile(InteractiveModel):
+class DeflectionProfile(Model):
     '''
     Deflection model of a BMCS beam
     '''
@@ -22,6 +25,8 @@ class DeflectionProfile(InteractiveModel):
     beam_design = tr.Instance(BeamDesign, ())
     mc = tr.Instance(MKappa, ())
     n_load_steps = Int(31)
+
+    tree = ['beam_design','mc']
 
     ipw_view = View(
         Item('n_load_steps', latex='n_{\mathrm{load~steps}}')
@@ -238,7 +243,7 @@ class DeflectionProfile(InteractiveModel):
     #         self.beam_design.F = original_F
     #     self.F_max_old = F_max
     #     return F_arr, np.array(w_list)
-    
+
 
     def subplots(self, fig):
         gs = gridspec.GridSpec(1, 2, figure=fig, width_ratios=[0.7, 0.3])
