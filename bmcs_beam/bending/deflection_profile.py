@@ -91,7 +91,7 @@ class DeflectionProfile(Model):
         Calculate the cross sectional rotation by integrating the curvature
         '''
         # TODO rename phi to theta
-        kappa_x = self.get_kappa_x() #+ self.get_kappa_shrinkage()
+        kappa_x = self.get_kappa_x() + 2e-6 #+ self.get_kappa_shrinkage()
         # Kappa = 1/R = d_phi/d_x
         phi_x = cumtrapz(kappa_x , initial=0)
         # resolve the integration constant by requiring zero curvature
