@@ -9,13 +9,9 @@ import sympy as sp
 import numpy as np
 from numbers import Number
 
-# Quick fix for [bmcs_shear_zone]
 class BeamDesign(CrossSectionDesign):
 
-# class BeamDesign(InteractiveModel):
     name = 'Beam Design'
-
-    # cs_design = tr.Instance(CrossSectionDesign, ())
 
     n_x = Int(100)
     L = Float(5000)
@@ -28,6 +24,8 @@ class BeamDesign(CrossSectionDesign):
     # beam_conf = Enum(values='')
 
     beam = tr.Instance(Beam)
+
+    tree = []
 
     def _beam_default(self):
         return BoundaryConditions.get_configured_beam(self.L, self.F, self.beam_conf_name)
