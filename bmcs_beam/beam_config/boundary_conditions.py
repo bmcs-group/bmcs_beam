@@ -15,7 +15,7 @@ import enum
 
 class BoundaryConfig(enum.Enum):
     # The following should be provided as sub classes with possible settings change and get moment ability
-    THREE_PB, FOUR_PB, SIMPLE_BEAM_DIST_LOAD, THREE_SPAN_DIST_LOAD, THREE_PB_FIXED_SUPPORT, SINGLE_MOMENT = range(6)
+    THREE_PB, FOUR_PB, SIMPLE_BEAM_DIST_LOAD, FIXED_SUPPORT_DIST_LOAD, FIXED_AND_ROLLER_SUPPORT_DIST_LOAD, CANTILEVER_DIST_LOAD, THREE_SPAN_DIST_LOAD, THREE_PB_FIXED_SUPPORT, SINGLE_MOMENT = range(9)
 
     # TODO [HS] This is not initialized when any of the above enums are created, fix this
     first_load_distance = 0
@@ -30,10 +30,10 @@ class BoundaryConditions(tr.HasTraits):
 
     @staticmethod
     def get_configured_beam(L, F, config):
-        # imput beam should have a numerical length and has E and I as symbols, and have predefined supports
+        # input beam should have a numerical length and has E and I as symbols, and have predefined supports
         R1, R2, R3, R4, M1, M2 = sp.symbols('R1, R2, R3, R4, M1, M2')
         E, I = sp.symbols('E, I')
-        beam = Beam(L, E, I)
+        beam = Beam(L, 1, 1)
         if config == BoundaryConfig.THREE_PB:
             # 3 point bending example
             beam.apply_load(R1, 0, -1)
@@ -84,6 +84,30 @@ class BoundaryConditions(tr.HasTraits):
             beam.apply_load(R2, L, -1)
             beam.apply_load(-F, L / 2, -2)
             beam.bc_deflection = [(0, 0), (L, 0)]
+
+        elif config == BoundaryConfig.FIXED_SUPPORT_DIST_LOAD:
+            beam.apply_load(R1, 0, -1)
+            beam.apply_load(M1, 0, -2)
+            beam.apply_load(R2, L, -1)
+            beam.apply_load(M2, L, -2)
+            beam.apply_load(F, 0, 0)
+            beam.bc_deflection = [(0, 0), (L, 0)]
+            beam.bc_slope = [(0, 0), (L, 0)]
+
+        elif config == BoundaryConfig.FIXED_AND_ROLLER_SUPPORT_DIST_LOAD:
+            beam.apply_load(R1, 0, -1)
+            beam.apply_load(R2, L, -1)
+            beam.apply_load(M2, L, -2)
+            beam.apply_load(F, 0, 0)
+            beam.bc_deflection = [(0, 0), (L, 0)]
+            beam.bc_slope = [(L, 0)]
+
+        elif config == BoundaryConfig.CANTILEVER_DIST_LOAD:
+            beam.apply_load(R1, 0, -1)
+            beam.apply_load(M1, 0, -2)
+            beam.apply_load(F, 0, 0)
+            beam.bc_deflection = [(0, 0)]
+            beam.bc_slope = [(L, 0)]
 
         return beam
 
@@ -164,7 +188,7 @@ class BoundaryConditions(tr.HasTraits):
 
                     arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
                                                      color='blue', mutation_scale=L / 500)
-                    ax.annotate('{} KN'.format(round(load_value / 1000., 2)), xy=xy_annotate, color='black')
+                    ax.annotate('{} KN'.format(-round(load_value / 1000., 2)), xy=xy_annotate, color='black')
                     ax.add_patch(arrow)
 
         # for i in range(0, len(load)):

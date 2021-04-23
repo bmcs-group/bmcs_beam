@@ -2,7 +2,8 @@ import traits.api as tr
 from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions, BoundaryConfig
 from bmcs_cross_section.cs_design import CrossSectionDesign
 from bmcs_utils.api import InteractiveModel, \
-    Int, Item, View, Float, Range, Button, ButtonEditor, mpl_align_yaxis, FloatRangeEditor
+    Int, Item, View, Float, Range, Button, ButtonEditor, mpl_align_yaxis_to_zero, \
+    mpl_show_one_legend_for_twin_axes, FloatRangeEditor
 from sympy.physics.continuum_mechanics.beam import Beam
 import sympy as sp
 import numpy as np
@@ -102,17 +103,18 @@ class BeamDesign(CrossSectionDesign):
         M_x = self.get_M_x(solve_beam_first=True) / M_scale
         Q_x = self.get_Q_x(solve_beam_first=False) / Q_scale
 
-        ax2.plot(x, -M_x, color='red', label='moment [kNm]')
-        ax2.fill(x, -M_x, color='red', alpha=0.1)
+        ax2.plot(x, M_x, color='red', label='moment [kNm]')
+        ax2.fill_between(x, 0, M_x, color='red', alpha=0.1)
         ax2.set_ylabel('M [kNm]')
-        ax2.legend()
+        ax2.invert_yaxis()
 
         ax3.plot(x, Q_x, lw=0.1, color='green', label='shear [kN]')
-        ax3.fill_between(x, Q_x, 0, color='green', alpha=0.1)
+        ax3.fill_between(x, Q_x, 0, color='green', alpha=0.15)
         ax3.set_ylabel('Q [kN]')
         ax3.set_xlabel('x [mm]')
-        ax3.legend()
-        mpl_align_yaxis(ax2, 0, ax3, 0)
+        ax3.invert_yaxis()
+        mpl_show_one_legend_for_twin_axes(ax2, ax3)
+        mpl_align_yaxis_to_zero(ax2, ax3)
 
     def subplots(self, fig):
         ax1, ax2 = fig.subplots(2, 1)
