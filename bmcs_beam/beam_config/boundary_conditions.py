@@ -117,7 +117,7 @@ class BoundaryConditions(tr.HasTraits):
         # ax.annotate('L = {} mm'.format(np.round(L), 0), xy=(L / 2, 5), color='black')
 
         # Beam
-        ax.plot([0, beam.length], [0, 0], linewidth=2, color='black')
+        ax.plot([0, beam.length], [0, 0], linewidth=0.5, color='black')
 
         # supports
         vertices = []
@@ -188,7 +188,7 @@ class BoundaryConditions(tr.HasTraits):
 
                     arrow = mpatches.FancyArrowPatch((x_tail, y_tail), (x_head, y_head),
                                                      color='blue', mutation_scale=L / 500)
-                    ax.annotate('{} KN'.format(-round(load_value / 1000., 2)), xy=xy_annotate, color='black')
+                    ax.annotate('{} kN'.format(-round(load_value / 1000., 2)), xy=xy_annotate, color='black')
                     ax.add_patch(arrow)
 
         # for i in range(0, len(load)):
