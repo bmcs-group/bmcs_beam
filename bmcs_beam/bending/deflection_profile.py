@@ -270,8 +270,10 @@ class DeflectionProfile(Model):
     def plot_curvature_along_beam(self, ax_k):
         x = self.beam_design.x
         kappa_x = self.get_kappa_x()
+        # Plotting curvature
         ax_k.plot(x, kappa_x, color='black', label='$\kappa [\mathrm{mm}^{-1}]$')
-        ax_k.plot(x, self.get_phi_x()/1000, color='green', label='$\phi [rad]$')
+        # Plotting rotation
+        # ax_k.plot(x, self.get_phi_x()/1000, color='green', label='$\phi [rad]$')
         ax_k.fill_between(x, 0, kappa_x, color='gray', alpha=0.1)
         ax_k.invert_yaxis()
         ax_k.set_ylabel(r'$\kappa [\mathrm{mm}^{-1}]$')
