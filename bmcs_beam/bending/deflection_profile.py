@@ -1,9 +1,10 @@
 import traits.api as tr
 import numpy as np
 
+from bmcs_utils.api import InteractiveModel, View, Item, Button, ButtonEditor, Float, Int, \
+    mpl_align_yaxis_to_zero, mpl_show_one_legend_for_twin_axes, ParametricStudy
 from bmcs_utils.api import Model, View, Item, Button, ButtonEditor, Float, Int, \
     mpl_align_yaxis, ParametricStudy
-from bmcs_utils.mpl_utils import mpl_align_xaxis
 
 from bmcs_beam.beam_config.beam_design import BeamDesign
 from bmcs_cross_section.mkappa import MKappa
@@ -44,13 +45,13 @@ class DeflectionProfile(Model):
         f_ck = 30
         t = 365
         t_s = 3
-        
+
         alpha_ds1 = 4
         alpha_ds2 = 0.12
-        
+
         RH = 0.70
         RH_0 = 1.00
-        
+
         f_cm = 30
         f_cmo = 10
         phi = 2.5
@@ -61,7 +62,7 @@ class DeflectionProfile(Model):
         A_c = 1000 * 300
         u = 2 * (1000 + 300)
 
-        eps_ca_infty = 2.5 * (f_ck - 10) * 1e-6    
+        eps_ca_infty = 2.5 * (f_ck - 10) * 1e-6
         beta_as_t = 1 - np.exp(- 0.2 * t ** 0.5)
         eps_ca = beta_as_t * eps_ca_infty
 
@@ -71,8 +72,8 @@ class DeflectionProfile(Model):
         h_0_ = [100, 200 ,300, 500, 800]
         k_h_ = [ 1, 0.85, 0.75, 0.7, 0.7 ]
         k_h = np.interp(h_0, h_0_, k_h_)
-        eps_cd0 = 0.85 * ((220 + 110 * alpha_ds1) * np.exp(-alpha_ds2 * f_cm / f_cmo)) * 1e-6 * beta_RH    
-        eps_cd = beta_ds_t_t_s * k_h * eps_cd0   
+        eps_cd0 = 0.85 * ((220 + 110 * alpha_ds1) * np.exp(-alpha_ds2 * f_cm / f_cmo)) * 1e-6 * beta_RH
+        eps_cd = beta_ds_t_t_s * k_h * eps_cd0
 
         eps_cs = eps_cd + eps_ca
 
@@ -83,7 +84,7 @@ class DeflectionProfile(Model):
         kappa_cs_ = np.array([kappa_cs])
         kappa_cs_x = np.zeros_like(self.get_kappa_x())
         kappa_cs_x[:] = kappa_cs_
-        
+
         return kappa_cs_x
 
     def get_phi_x(self):
@@ -269,8 +270,10 @@ class DeflectionProfile(Model):
     def plot_curvature_along_beam(self, ax_k):
         x = self.beam_design.x
         kappa_x = self.get_kappa_x()
+        # Plotting curvature
         ax_k.plot(x, kappa_x, color='black', label='$\kappa [\mathrm{mm}^{-1}]$')
-        ax_k.plot(x, self.get_phi_x()/1000, color='green', label='$\phi [rad]$')
+        # Plotting rotation
+        # ax_k.plot(x, self.get_phi_x()/1000, color='green', label='$\phi [rad]$')
         ax_k.fill_between(x, 0, kappa_x, color='gray', alpha=0.1)
         ax_k.invert_yaxis()
         ax_k.set_ylabel(r'$\kappa [\mathrm{mm}^{-1}]$')
