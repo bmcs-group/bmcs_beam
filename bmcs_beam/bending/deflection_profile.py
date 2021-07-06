@@ -264,6 +264,8 @@ class DeflectionProfile(Model):
     def plot_fw_with_fmax(self, ax_Fw):
         self.plot_fw(ax_Fw)
         current_F = abs(self.F_scale * self.beam_design.F)
+        w_SLS = self.beam_design.L / 250
+        ax_Fw.plot([w_SLS,w_SLS], [0,current_F], color='green')
         ax_Fw.axhline(y=current_F, color='r')
         ax_Fw.annotate('F = {} kN'.format(round(current_F,2)), xy=(0, current_F), color='r')
 
