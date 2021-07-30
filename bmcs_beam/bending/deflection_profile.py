@@ -31,6 +31,13 @@ class DeflectionProfile(Model):
         Item('n_load_steps', latex='n_{\mathrm{load~steps}}')
     )
 
+    f_exp_data = tr.List
+    w_exp_data = tr.List
+
+    def add_fw_exp(self, load_array, deflection_array):
+        self.f_exp_data.append(load_array)
+        self.w_exp_data.append(deflection_array)
+
     def get_kappa_x(self):
         '''
         Profile of curvature along the beam
@@ -263,9 +270,14 @@ class DeflectionProfile(Model):
 
     def plot_fw_with_fmax(self, ax_Fw):
         self.plot_fw(ax_Fw)
+        self.plot_exp_fw(ax_Fw)
         current_F = abs(self.F_scale * self.beam_design.F)
         ax_Fw.axhline(y=current_F, color='r')
         ax_Fw.annotate('F = {} kN'.format(round(current_F,2)), xy=(0, current_F), color='r')
+
+    def plot_exp_fw(self, ax_Fw):
+        for w, f in zip(self.w_exp_data, self.f_exp_data):
+            ax_Fw.plot(w, f, label='exp deflection', lw=2)
 
     def plot_curvature_along_beam(self, ax_k):
         x = self.beam_design.x
@@ -300,13 +312,20 @@ class DeflectionProfile(Model):
 
 class LoadDeflectionParamsStudy(ParametricStudy):
 
-    def __init__(self, dp):
+    def __init__(self, dp, show_sls_deflection_limit = False):
         self.dp = dp
+        self.show_sls_deflection_limit = show_sls_deflection_limit
 
     def plot(self, ax, param_name, value):
         ax.set_xlabel(r'$w_\mathrm{max}$ [mm]')
         ax.set_ylabel(r'$F$ [kN]')
         F, w = self.dp.get_Fw()
         ax.plot(w, self.dp.F_scale * F, label=param_name + '=' + str(value), lw=2)
+
+        if self.show_sls_deflection_limit:
+            limit = self.dp.beam_design.L/250
+            ax.axvline(x=limit)
+            ax.text(limit + 0.1, 0, 'L/250 = ' + str(self.dp.beam_design.L/250), rotation=90)
+
         ax.set_title(param_name)
         ax.legend()
