@@ -318,16 +318,17 @@ class LoadDeflectionParamsStudy(ParametricStudy):
         self.dp = dp
         self.show_sls_deflection_limit = show_sls_deflection_limit
 
-    def plot(self, ax, param_name, value):
+    def plot(self, ax, title, curve_label):
         ax.set_xlabel(r'$w_\mathrm{max}$ [mm]')
         ax.set_ylabel(r'$F$ [kN]')
         F, w = self.dp.get_Fw()
-        ax.plot(w, self.dp.F_scale * F, label=param_name + '=' + str(value), lw=2)
+
+        ax.plot(w, self.dp.F_scale * F, label=curve_label, lw=2)
 
         if self.show_sls_deflection_limit:
             limit = self.dp.beam_design.L/250
             ax.axvline(x=limit)
             ax.text(limit + 0.1, 0, 'L/250 = ' + str(self.dp.beam_design.L/250), rotation=90)
 
-        ax.set_title(param_name)
+        ax.set_title(title)
         ax.legend()
