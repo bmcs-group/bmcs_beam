@@ -3,11 +3,16 @@ from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions, Bounda
 from bmcs_cross_section.cs_design import CrossSectionDesign
 from bmcs_utils.api import InteractiveModel, \
     Int, Item, View, Float, Range, Button, ButtonEditor, mpl_align_yaxis_to_zero, \
-    mpl_show_one_legend_for_twin_axes, FloatRangeEditor
+    mpl_show_one_legend_for_twin_axes, FloatRangeEditor, EitherType, EitherTypeEditor
 from sympy.physics.continuum_mechanics.beam import Beam
 import sympy as sp
 import numpy as np
 from numbers import Number
+
+from bmcs_beam.beam_config.system.four_pb_system import FourPBSystem
+from bmcs_beam.beam_config.system.simple_dist_load_system import SimpleDistLoadSystem
+from bmcs_beam.beam_config.system.three_pb_system import ThreePBSystem
+
 
 class BeamDesign(CrossSectionDesign):
 
@@ -16,9 +21,20 @@ class BeamDesign(CrossSectionDesign):
     n_x = Int(100)
     L = Float(5000)
     F = Float(-1000)
-    # TODO [HS]: make the conf a dropdown menu when the implementation is done by [RC]
+
     beam_conf_name = BoundaryConfig.THREE_PB
     beam_conf_name_slider = Range(0.)
+
+    system = EitherType(options=[('three_pb', ThreePBSystem),
+                                 ('four_pb', FourPBSystem),
+                                 ('simple_beam_dist_load', SimpleDistLoadSystem),
+                                 # ('fixed_support_dist_load', CarbonReinfMatMod),
+                                 # ('fixed_and_roller_support_dist_load', CarbonReinfMatMod),
+                                 # ('cantilever_dist_load', CarbonReinfMatMod),
+                                 # ('three_span_dist_load', CarbonReinfMatMod),
+                                 # ('three_pb_fixed_support', CarbonReinfMatMod),
+                                 # ('single_moment', CarbonReinfMatMod),
+                                 ])
 
     # beam_configs = BoundaryConfig
     # beam_conf = Enum(values='')
@@ -58,7 +74,8 @@ class BeamDesign(CrossSectionDesign):
         Item('L', latex='L \mathrm{[mm]}'),
         Item('F', latex='F \mathrm{[N]}'),
         Item('n_x', latex='n_x'),
-        Item('beam_conf_name_slider', editor=FloatRangeEditor(label='Beam config', n_steps=5, low=0, high=5)),
+        # Item('beam_conf_name_slider', editor=FloatRangeEditor(label='Beam config', n_steps=5, low=0, high=5)),
+        Item('system'),
         # Item('beam_conf', editor=EnumEditor(label='Beam config', options_tuple_list=beam_configs)),
         # Item('add_force_btn', editor=ButtonEditor(label='Force', icon='plus'))
     )
