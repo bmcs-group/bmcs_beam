@@ -27,7 +27,7 @@ class BeamDesign(CrossSectionDesign):
 
     system = EitherType(options=[('three_pb', ThreePBSystem),
                                  ('four_pb', FourPBSystem),
-                                 ('simple_beam_dist_load', SimpleDistLoadSystem),
+                                 # ('simple_beam_dist_load', SimpleDistLoadSystem),
                                  # ('fixed_support_dist_load', CarbonReinfMatMod),
                                  # ('fixed_and_roller_support_dist_load', CarbonReinfMatMod),
                                  # ('cantilever_dist_load', CarbonReinfMatMod),
@@ -117,8 +117,11 @@ class BeamDesign(CrossSectionDesign):
         M_scale = 1e+6
         Q_scale = 1000
 
-        M_x = self.get_M_x(solve_beam_first=True) / M_scale
-        Q_x = self.get_Q_x(solve_beam_first=False) / Q_scale
+        M_x = self.system_.struct.get_element_result_range(unit = "moment") / M_scale
+        Q_x= self.system_.struct.get_element_result_range(unit = "shear") / Q_scale
+
+        # M_x = self.get_M_x(solve_beam_first=True) / M_scale
+        # Q_x = self.get_Q_x(solve_beam_first=False) / Q_scale
 
         ax2.plot(x, M_x, color='red', label='moment [kNm]')
         ax2.fill_between(x, 0, M_x, color='red', alpha=0.1)
