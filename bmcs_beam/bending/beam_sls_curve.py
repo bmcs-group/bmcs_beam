@@ -344,6 +344,9 @@ class BeamSLSCurve(bu.Model):
         if label:
             cs.collections[0].set_label(label)
 
+        # Put values on lines
+        # ax.clabel(cs, inline=True, fontsize=10)
+
         p = cs.collections[0].get_paths()[0]
         v = p.vertices
         self.rho = v[:, 0]
