@@ -16,18 +16,6 @@ class FourPBSystem(System):
         Item('L_F', latex='L_F \mathrm{[N]}'),
     )
 
-    @staticmethod
-    def subplots(fig):
-        axes = fig.subplots(4, 2)
-        plt.subplots_adjust(hspace=1)
-        fig.set_size_inches(7, 8)
-        return axes
-
-    def update_plot(self, axes):
-        self._update_struct()
-        self._plot_struct(axes[0, 0])
-        # self._plot_internal_forces(axes[1:, 0])
-
     def _update_struct(self):
         self.struct = self.get_new_struct()
 
@@ -43,3 +31,8 @@ class FourPBSystem(System):
         self.struct.point_load(n_x_to_F + 1, Fy=self.F)
         self.struct.point_load(n_x_to_F + n_x_between_forces + 1, Fy=self.F)
         self.struct.solve()
+
+    def get_force_from_max_moment(self, m):
+        # This should be done numerically, but here for efficiency and
+        # because this is a known case it's given directly
+        return m / self.L_F

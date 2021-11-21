@@ -21,7 +21,7 @@ class ThreePBSystem(System):
 
     def update_plot(self, axes):
         self._update_struct()
-        self._plot_struct(axes[0])
+        self.plot_struct(axes[0])
         # self._plot_internal_forces(axes[1])
 
     def _update_struct(self):

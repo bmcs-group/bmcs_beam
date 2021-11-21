@@ -18,15 +18,11 @@ class BeamDesign(CrossSectionDesign):
 
     name = 'Beam Design'
 
-    n_x = Int(100)
-    L = Float(5000)
-    F = Float(-1000)
-
     beam_conf_name = BoundaryConfig.THREE_PB
     beam_conf_name_slider = Range(0.)
 
-    system = EitherType(options=[('three_pb', ThreePBSystem),
-                                 ('four_pb', FourPBSystem),
+    system = EitherType(options=[('four_pb', FourPBSystem),
+                                 ('three_pb', ThreePBSystem),
                                  # ('simple_beam_dist_load', SimpleDistLoadSystem),
                                  # ('fixed_support_dist_load', CarbonReinfMatMod),
                                  # ('fixed_and_roller_support_dist_load', CarbonReinfMatMod),
@@ -39,31 +35,25 @@ class BeamDesign(CrossSectionDesign):
     # beam_configs = BoundaryConfig
     # beam_conf = Enum(values='')
 
-    beam = tr.Instance(Beam)
+    # beam = tr.Instance(Beam)
 
     tree = []
 
-    def _beam_default(self):
-        return BoundaryConditions.get_configured_beam(self.L, self.F, self.beam_conf_name)
+    # def _beam_default(self):
+    #     return BoundaryConditions.get_configured_beam(self.L, self.F, self.beam_conf_name)
 
-    x = tr.Property(depends_on='L, n_x')
+    # @tr.observe("beam_conf_name_slider")
+    # def notify_slider_change(self, event):
+    #     self.beam_conf_name = BoundaryConfig(int(event.new))
+    #     self.beam = BoundaryConditions.get_configured_beam(self.L, self.F, self.beam_conf_name)
 
-    @tr.cached_property
-    def _get_x(self):
-        return np.linspace(0, self.L, self.n_x)
+    # @tr.observe("L")
+    # def notify_L_change(self, event):
+    #     self.beam = BoundaryConditions.get_configured_beam(event.new, self.F, self.beam_conf_name)
 
-    @tr.observe("beam_conf_name_slider")
-    def notify_slider_change(self, event):
-        self.beam_conf_name = BoundaryConfig(int(event.new))
-        self.beam = BoundaryConditions.get_configured_beam(self.L, self.F, self.beam_conf_name)
-
-    @tr.observe("L")
-    def notify_L_change(self, event):
-        self.beam = BoundaryConditions.get_configured_beam(event.new, self.F, self.beam_conf_name)
-
-    @tr.observe("F")
-    def notify_F_change(self, event):
-        self.beam = BoundaryConditions.get_configured_beam(self.L, event.new, self.beam_conf_name)
+    # @tr.observe("F")
+    # def notify_F_change(self, event):
+    #     self.beam = BoundaryConditions.get_configured_beam(self.L, event.new, self.beam_conf_name)
 
     # add_force_btn = Button()
     #
@@ -71,9 +61,9 @@ class BeamDesign(CrossSectionDesign):
     #     self.L += 100
 
     ipw_view = View(
-        Item('L', latex='L \mathrm{[mm]}'),
-        Item('F', latex='F \mathrm{[N]}'),
-        Item('n_x', latex='n_x'),
+        # Item('L', latex='L \mathrm{[mm]}'),
+        # Item('F', latex='F \mathrm{[N]}'),
+        # Item('n_x', latex='n_x'),
         # Item('beam_conf_name_slider', editor=FloatRangeEditor(label='Beam config', n_steps=5, low=0, high=5)),
         Item('system'),
         # Item('beam_conf', editor=EnumEditor(label='Beam config', options_tuple_list=beam_configs)),
@@ -84,7 +74,7 @@ class BeamDesign(CrossSectionDesign):
         # TODO: fix this
         #  The following is a quick fix in order for 4pb to work, without it the self.beam is somehow corrupted after
         #  using the function get_Fw() in DeflectionProfile so it's not able to solve the beam for 4pb!
-        self.beam = BoundaryConditions.get_configured_beam(self.L, self.F, self.beam_conf_name)
+        # self.beam = BoundaryConditions.get_configured_beam(self.L, self.F, self.beam_conf_name)
 
         reactions_names = []
 
@@ -101,7 +91,7 @@ class BeamDesign(CrossSectionDesign):
         x = sp.symbols('x')
         M_ = self.beam.bending_moment().rewrite(sp.Piecewise)
         get_M = sp.lambdify(x, M_, 'numpy')
-        return get_M(self.x)
+        return get_M(self.system_.x)
 
     def get_Q_x(self, solve_beam_first=True):
         if solve_beam_first:
@@ -109,16 +99,40 @@ class BeamDesign(CrossSectionDesign):
         x = sp.symbols('x')
         Q_ = self.beam.shear_force().rewrite(sp.Piecewise)
         get_Q = sp.lambdify(x, Q_, 'numpy')
-        Q_x = get_Q(self.x)
+        Q_x = get_Q(self.system_.x)
         return Q_x
 
+    # def plot_MQ(self, ax2, ax3):
+    #     x = self.system_.x
+    #     M_scale = 1e+6
+    #     Q_scale = 1000
+    #
+    #     M_x = self.system_.struct.get_element_result_range(unit = "moment") / M_scale
+    #     Q_x= self.system_.struct.get_element_result_range(unit = "shear") / Q_scale
+    #
+    #     # M_x = self.get_M_x(solve_beam_first=True) / M_scale
+    #     # Q_x = self.get_Q_x(solve_beam_first=False) / Q_scale
+    #
+    #     ax2.plot(x, M_x, color='red', label='moment [kNm]')
+    #     ax2.fill_between(x, 0, M_x, color='red', alpha=0.1)
+    #     ax2.set_ylabel('M [kNm]')
+    #     ax2.invert_yaxis()
+    #
+    #     ax3.plot(x, Q_x, lw=0.1, color='green', label='shear [kN]')
+    #     ax3.fill_between(x, Q_x, 0, color='green', alpha=0.15)
+    #     ax3.set_ylabel('Q [kN]')
+    #     ax3.set_xlabel('x [mm]')
+    #     ax3.invert_yaxis()
+    #     mpl_show_one_legend_for_twin_axes(ax2, ax3)
+    #     mpl_align_yaxis_to_zero(ax2, ax3)
+
     def plot_MQ(self, ax2, ax3):
-        x = self.x
+        x = self.system_.x
         M_scale = 1e+6
         Q_scale = 1000
 
-        M_x = self.system_.struct.get_element_result_range(unit = "moment") / M_scale
-        Q_x= self.system_.struct.get_element_result_range(unit = "shear") / Q_scale
+        M_x = np.array(self.system_.struct.get_element_result_range(unit = "moment")) / M_scale
+        Q_x= np.array(self.system_.struct.get_element_result_range(unit = "shear")) / Q_scale
 
         # M_x = self.get_M_x(solve_beam_first=True) / M_scale
         # Q_x = self.get_Q_x(solve_beam_first=False) / Q_scale
@@ -157,10 +171,13 @@ class BeamDesign(CrossSectionDesign):
     #
     def update_plot(self, axes):
         ax1, ax2, ax3 = axes
-        BoundaryConditions.plot(ax1, self.beam)
+        # BoundaryConditions.plot(ax1, self.beam)
+        # self.plot_MQ(ax2, ax3)
+        # ax1.axis('equal')
+        # ax1.autoscale(tight=True)
+        self.system_._update_struct()
+        self.system_.plot_struct(ax1)
         self.plot_MQ(ax2, ax3)
-        ax1.axis('equal')
-        ax1.autoscale(tight=True)
 
     # Quick fix: needed for [bmcs_shear_zone]
     def plot_reinforcement(self, ax):
