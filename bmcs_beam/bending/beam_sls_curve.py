@@ -91,7 +91,7 @@ class BeamSLSCurve(bu.Model):
             sl = np.interp(self.rho_slider, self.rho, self.sl)
             # TODO, this works only if we have one reinf layer AT THE BOTTOM!
             d = dp.mc.cross_section_shape_.H - dp.mc.cross_section_layout.items[0].z
-            dp.beam_design.L = sl * d
+            dp.beam_design.system_.L = sl * d
             dp.mc.state_changed = True
 
     @tr.observe('apply_material_factors')
@@ -193,19 +193,19 @@ class BeamSLSCurve(bu.Model):
             # alpha_ft * alpha_f_eff / gamma_frp (see El-Ghadioui2020_PhD P. 122)
             bl1.matmod_.trait_set(E=158000, f_t=2500, factor=0.85 * 0.9 / 1.3 if self.apply_material_factors else 1)
         mc.cross_section_layout.add_layer(bl1)
+        # mc.state_changed = True
 
         dp = DeflectionProfile(mc=mc)
-
         if self.system_type == '4pb':
-            dp.beam_design.beam_conf_name = BoundaryConfig.FOUR_PB
-            dp.beam_design.beam_conf_name.first_load_distance = L / 3
+            dp.beam_design.system = '4pb'
+            dp.beam_design.beam_.L_F = dp.beam_design.beam_.L/3
         elif self.system_type == '3pb':
-            dp.beam_design.beam_conf_name = BoundaryConfig.THREE_PB
+            dp.beam_design.system = '3pb'
         elif self.system_type == 'dist':
-            dp.beam_design.beam_conf_name = BoundaryConfig.SIMPLE_BEAM_DIST_LOAD
-            dp.F_scale = 1
+            dp.beam_design.system = 'simple_beam_dist_load'
 
-        dp.beam_design.L = 8 * d
+        dp.beam_design.system_.L = 8 * d
+
         return dp
 
     def run(self, update_progress=lambda t: t):
@@ -259,7 +259,7 @@ class BeamSLSCurve(bu.Model):
                        'rein[0].E': rein[0].matmod_.E,
                        'rein[0].z': rein[0].z,
                        'rein[0].A': rein[0].A,
-                       'dp.beam_design.L': dp.beam_design.L, }
+                       'dp.beam_design.system_.L': dp.beam_design.system_.L, }
         with open(path, 'w') as outfile:
             json.dump(output_data, outfile, sort_keys=True, indent=4)
 
@@ -307,7 +307,7 @@ class BeamSLSCurve(bu.Model):
 
                 # assigning the grid length (L_g) to the beam length variable
                 L_g = sl * d
-                dp.beam_design.L = L_g
+                dp.beam_design.system_.L = L_g
 
                 dp.mc.state_changed = True
 
@@ -320,7 +320,7 @@ class BeamSLSCurve(bu.Model):
                 if plot:
                     ax.plot(w_data, F_data / 1000, label="rho={}%-sl={} ".format(rho * 100, sl))
 
-                w_s = dp.beam_design.L / 250
+                w_s = dp.beam_design.system_.L / 250
                 F_u = max(F_data)
                 F_s = np.interp(w_s, w_data, F_data, right=F_u * 2)
 

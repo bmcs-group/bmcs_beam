@@ -13,7 +13,7 @@ import matplotlib.gridspec as gridspec
 
 from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions, BoundaryConfig
 from bmcs_beam.beam_config.system.cantilever_system import CantileverDistLoadSystem
-from bmcs_beam.beam_config.system.simple_dist_load_system import SimpleDistLoadBeamSystem
+from bmcs_beam.beam_config.system.simple_dist_load_system import SimpleDistLoadSystem
 
 
 class DeflectionProfile(Model):
@@ -42,12 +42,12 @@ class DeflectionProfile(Model):
 
     _plot_F_scale = tr.Property()
     def _get__plot_F_scale(self):
-        F_scale_to_kN, _ = self.beam_design.beam_.get_plot_force_scale_and_unit()
+        F_scale_to_kN, _ = self.beam_design.system_.get_plot_force_scale_and_unit()
         return self.plot_F_scale * F_scale_to_kN
 
     F_unit = tr.Property()
     def _get_F_unit(self):
-        _, unit = self.beam_design.beam_.get_plot_force_scale_and_unit()
+        _, unit = self.beam_design.system_.get_plot_force_scale_and_unit()
         return unit
 
     def add_fw_exp(self, load_array, deflection_array):
@@ -117,7 +117,7 @@ class DeflectionProfile(Model):
         # TODO rename phi to theta
         kappa_x = self.get_kappa_x() # + 2e-6 #+ self.get_kappa_shrinkage()
         # Kappa = 1/R = d_phi/d_x
-        phi_x = cumtrapz(kappa_x, self.beam_design.x, initial=0)
+        phi_x = cumtrapz(kappa_x, self.beam_design.system_.x, initial=0)
 
         # resolve the integration constant by requiring zero curvature
         # at the midspan of the beam
@@ -125,14 +125,14 @@ class DeflectionProfile(Model):
         #           for other loading conditions.
         #           HS: I guess this works for 4pb too (for symmetric beams)
 
-        if not isinstance(self.beam_design.beam_, CantileverDistLoadSystem):
-                # and not isinstance(self.beam_design.beam_, FixedAndRollerDistLoadBeamSystem):
-            phi_x -= np.interp(self.beam_design.L / 2, self.beam_design.x, phi_x)
-        # elif isinstance(self.beam_design.beam_, FixedAndRollerDistLoadBeamSystem):
+        if not isinstance(self.beam_design.system_, CantileverDistLoadSystem):
+                # and not isinstance(self.beam_design.system_, FixedAndRollerDistLoadBeamSystem):
+            phi_x -= np.interp(self.beam_design.system_.L / 2, self.beam_design.system_.x, phi_x)
+        # elif isinstance(self.beam_design.system_, FixedAndRollerDistLoadBeamSystem):
         #     phi_x -= phi_x[-1]
 
         # This is a more general approach but not sure from it!
-        # kappa_derivative = np.gradient(kappa_x, self.beam_design.x)
+        # kappa_derivative = np.gradient(kappa_x, self.beam_design.system_.x)
         # kappa_derivative_signs = np.sign(kappa_derivative)
         # sign_change = (np.diff(kappa_derivative_signs) != 0) * 1
         # if sign_change.size != 1:
@@ -147,7 +147,7 @@ class DeflectionProfile(Model):
         Profile of deflection along the beam
         """
         phi_x = self.get_phi_x()
-        w_x = cumtrapz(phi_x, self.beam_design.x, initial=0)
+        w_x = cumtrapz(phi_x, self.beam_design.system_.x, initial=0)
         # resolve the integration constant by requiring zero deflection
         # at the left support - the right one comes automatically
         # TODO [SR, HS] this is specific to 3 point bending - generalize
@@ -167,21 +167,21 @@ class DeflectionProfile(Model):
     '''
     def _get_F_max(self):
         M_I, kappa_I = self.mc.inv_M_kappa
-        F_max = self.beam_design.beam_.get_max_force(M_I)
+        F_max = self.beam_design.system_.get_max_force(M_I)
         return abs(F_max)
 
     # def run(self):
     #     F_arr = np.linspace(0, self.F_max, self.n_load_steps)
     #     w_list = []
-    #     original_F = self.beam_design.F
+    #     original_F = self.beam_design.system_.F
     #     for F in F_arr:
     #         if F == 0:
     #             w_list.append(0)
     #         else:
-    #             self.beam_design.F = -F
+    #             self.beam_design.system_.F = -F
     #             # Append the maximum deflection value that corresponds to the new load (F)
     #             w_list.append(np.fabs(np.min(self.get_w_x())))
-    #     self.beam_design.F = original_F
+    #     self.beam_design.system_.F = original_F
     #     return F_arr, np.array(w_list)
     #
     # def reset(self):
@@ -202,16 +202,16 @@ class DeflectionProfile(Model):
         #                the two dimensional array of and now loop over theta is
         #                neeeded then. Theta works just as a slider - as originally
         #                introduced.
-        original_F = self.beam_design.F
+        original_F = self.beam_design.system_.F
         for F in F_arr:
             if F == 0:
                 w_list.append(0)
             else:
-                self.beam_design.F = -F
+                self.beam_design.system_.F = -F
                 # Append the maximum deflection value that corresponds to the new load (F)
                 w_list.append(np.max(np.fabs(self.get_w_x())))
         if self.F_max_old == F_max:
-            self.beam_design.F = original_F
+            self.beam_design.system_.F = original_F
         self.F_max_old = F_max
         return F_arr, np.array(w_list)
     
@@ -228,16 +228,16 @@ class DeflectionProfile(Model):
     #     #                the two dimensional array of and now loop over theta is
     #     #                neeeded then. Theta works just as a slider - as originally
     #     #                introduced.
-    #     original_F = self.beam_design.F
+    #     original_F = self.beam_design.system_.F
     #     for F in F_arr:
     #         if F == 0:
     #             w_list.append(0)
     #         else:
-    #             self.beam_design.F = -F
+    #             self.beam_design.system_.F = -F
     #             # Append the maximum deflection value that corresponds to the new load (F)
     #             w_list.append(np.fabs(self.get_w_x()[inx]))
     #     if self.F_max_old == F_max:
-    #         self.beam_design.F = original_F
+    #         self.beam_design.system_.F = original_F
     #     self.F_max_old = F_max
     #     return F_arr, np.array(w_list)
 
@@ -262,8 +262,8 @@ class DeflectionProfile(Model):
     def plot_fw_with_fmax(self, ax_Fw):
         self.plot_fw(ax_Fw)
         self.plot_exp_fw(ax_Fw)
-        current_F = abs(self._plot_F_scale * self.beam_design.F)
-        w_SLS = self.beam_design.L / 250
+        current_F = abs(self._plot_F_scale * self.beam_design.system_.F)
+        w_SLS = self.beam_design.system_.L / 250
         if self.w_SLS:
             ax_Fw.plot([w_SLS, w_SLS], [0, current_F], color='green')
         ax_Fw.axhline(y=current_F, color='r')
@@ -274,7 +274,7 @@ class DeflectionProfile(Model):
             ax_Fw.plot(w, f, label='exp deflection', lw=2)
 
     def plot_curvature_along_beam(self, ax_k):
-        x = self.beam_design.x
+        x = self.beam_design.system_.x
         kappa_x = self.get_kappa_x()
         # Plotting curvature
         ax_k.plot(x, kappa_x, color='black', label='$\kappa [\mathrm{mm}^{-1}]$')
@@ -286,7 +286,7 @@ class DeflectionProfile(Model):
         ax_k.set_xlabel(r'$x$')
 
     def plot_displacement_along_beam(self, ax_w):
-        x = self.beam_design.x
+        x = self.beam_design.system_.x
         w_x = self.get_w_x()
         ax_w.plot(x, w_x, color='blue', label='$w$ [mm]')
         ax_w.fill_between(x, 0, w_x, color='blue', alpha=0.1)
@@ -315,9 +315,9 @@ class LoadDeflectionParamsStudy(ParametricStudy):
         ax.plot(w, self.dp._plot_F_scale * F, label=curve_label, lw=2)
 
         if self.show_sls_deflection_limit:
-            limit = self.dp.beam_design.L/250
+            limit = self.dp.beam_design.system_.L/250
             ax.axvline(x=limit)
-            ax.text(limit + 0.1, 0, 'L/250 = ' + str(self.dp.beam_design.L/250), rotation=90)
+            ax.text(limit + 0.1, 0, 'L/250 = ' + str(self.dp.beam_design.system_.L/250), rotation=90)
 
         ax.set_title(title)
         ax.legend()

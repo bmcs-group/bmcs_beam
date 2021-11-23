@@ -3,9 +3,9 @@ from bmcs_utils.api import Model, Int, Item, View, Float, FloatEditor, IntEditor
 from bmcs_beam.beam_config.system.beam_system import BeamSystem
 import traits.api as tr
 
-class FourPBBeamSystem(BeamSystem):
+class FourPBSystem(BeamSystem):
 
-    name = 'FourPBBeamSystem'
+    name = 'FourPBSystem'
 
     F = Float(-1000, SYSTEM=True)
     L_F = Float(1000, desc='length from support to the force', SYSTEM=True)
@@ -15,10 +15,10 @@ class FourPBBeamSystem(BeamSystem):
 
     tree = []
 
-    @tr.observe('L_F')
-    def check_L_F_max(self, event):
-        if self.L_F > self.L/2 - 1:
-            self.L_F = self.L/2 - 1
+    # @tr.observe('L_F')
+    # def check_L_F_max(self, event):
+    #     if self.L_F > self.L/2 - 1:
+    #         self.L_F = self.L/2 - 1
 
     ipw_view = View(
         *BeamSystem.ipw_view.content,

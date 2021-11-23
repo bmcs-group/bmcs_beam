@@ -2,9 +2,9 @@ from bmcs_utils.api import Model, Int, Item, View, Float
 from bmcs_beam.beam_config.system.beam_system import BeamSystem
 import numpy as np
 
-class SimpleDistLoadBeamSystem(BeamSystem):
+class SimpleDistLoadSystem(BeamSystem):
 
-    name = 'SimpleDistLoadBeamSystem'
+    name = 'SimpleDistLoadSystem'
 
     F = Float(-5, SYSTEM=True)
     n_x = 2

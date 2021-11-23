@@ -3,7 +3,7 @@ from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions, Bounda
 from bmcs_beam.bending.deflection_profile import DeflectionProfile, LoadDeflectionParamsStudy
 from bmcs_beam.bending.beam_sls_curve import BeamSLSCurve, SLSParamStudy
 from bmcs_beam.bending.beam_sls_curve import BeamSLSCurve
-from bmcs_beam.beam_config.system.three_pb_system import ThreePBBeamSystem
-from bmcs_beam.beam_config.system.four_pb_system import FourPBBeamSystem
-from bmcs_beam.beam_config.system.simple_dist_load_system import SimpleDistLoadBeamSystem
+from bmcs_beam.beam_config.system.three_pb_system import ThreePBSystem
+from bmcs_beam.beam_config.system.four_pb_system import FourPBSystem
+from bmcs_beam.beam_config.system.simple_dist_load_system import SimpleDistLoadSystem
 from bmcs_beam.beam_config.system.cantilever_system import CantileverDistLoadSystem
