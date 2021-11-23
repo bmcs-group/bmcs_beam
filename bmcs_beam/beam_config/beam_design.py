@@ -14,8 +14,8 @@ class BeamDesign(CrossSectionDesign):
     name = 'BeamSystem Design'
 
     state_changed = tr.Event
-    beam = EitherType(options=[('four_pb', FourPBBeamSystem),
-                               ('three_pb', ThreePBBeamSystem),
+    beam = EitherType(options=[('three_pb', ThreePBBeamSystem),
+                                ('four_pb', FourPBBeamSystem),
                                ('simple_beam_dist_load', SimpleDistLoadBeamSystem),
                                ('cantilever_dist_load', CantileverDistLoadSystem),
                                # ('fixed_support_dist_load', CarbonReinfMatMod),
