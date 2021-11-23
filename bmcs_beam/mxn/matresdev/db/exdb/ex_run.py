@@ -27,7 +27,7 @@
 #   and known
 #   classes. Then, the mapping between a class and between the directories
 #   is established. Typically, there is a data pool in the home directory
-#   or a network file system accessible.
+#   or a network file beam accessible.
 #
 # - The result of the scanning procedure
 #   is list of data directories available for

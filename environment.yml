@@ -13,6 +13,7 @@ dependencies:
 - ipympl
 - pip
 - pip:
+  - anastruct==1.2.0
   - bmcs-utils
   - bmcs-cross-section
   - bmcs-beam
