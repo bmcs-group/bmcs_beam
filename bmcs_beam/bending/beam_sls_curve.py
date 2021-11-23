@@ -9,7 +9,7 @@ from matplotlib.ticker import PercentFormatter
 import traits.api as tr
 
 class BeamSLSCurve(bu.ParametricStudy):
-    name = 'Beam SLS Curve'
+    name = 'BeamSystem SLS Curve'
 
     '''
     - link to data cache identifying the directory where to store the

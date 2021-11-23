@@ -12,6 +12,8 @@ from scipy.integrate import cumtrapz
 import matplotlib.gridspec as gridspec
 
 from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions, BoundaryConfig
+from bmcs_beam.beam_config.system.cantilever_system import CantileverDistLoadSystem
+from bmcs_beam.beam_config.system.simple_dist_load_system import SimpleDistLoadBeamSystem
 
 
 class DeflectionProfile(Model):
@@ -109,10 +111,10 @@ class DeflectionProfile(Model):
         #           for other loading conditions.
         #           HS: I guess this works for 4pb too (for symmetric beams)
 
-        if self.beam_design.beam_conf_name != BoundaryConfig.FIXED_AND_ROLLER_SUPPORT_DIST_LOAD \
-                and self.beam_design.beam_conf_name != BoundaryConfig.CANTILEVER_DIST_LOAD:
+        if not isinstance(self.beam_design.beam_, SimpleDistLoadBeamSystem) \
+                and not isinstance(self.beam_design.beam_, CantileverDistLoadSystem):
             phi_x -= np.interp(self.beam_design.L / 2, self.beam_design.x, phi_x)
-        elif self.beam_design.beam_conf_name == BoundaryConfig.FIXED_AND_ROLLER_SUPPORT_DIST_LOAD:
+        elif isinstance(self.beam_design.beam_, SimpleDistLoadBeamSystem):
             phi_x -= phi_x[-1]
 
         # This is a more general approach but not sure from it!
@@ -140,7 +142,6 @@ class DeflectionProfile(Model):
         # if self.beam_design.beam_conf_name != BoundaryConfig.FIXED_AND_ROLLER_SUPPORT_DIST_LOAD \
         #         and self.beam_design.beam_conf_name != BoundaryConfig.CANTILEVER_DIST_LOAD:
         #     w_x += w_x[0]
-
         return w_x
 
     theta_max = tr.Float(1)
@@ -151,33 +152,9 @@ class DeflectionProfile(Model):
     of the cross section.
     '''
     def _get_F_max(self):
-        # specific to 3pt bending  - equation should be provided by the
-        # BoundaryCondition class - corresponding to the load configuration.
-        # TODO [SR, HS] generalize the following and use something better than M_I[-1] and M_I[0]
-        #           for other loading conditions.
         M_I, kappa_I = self.mc.inv_M_kappa
-        if self.beam_design.beam_conf_name == BoundaryConfig.THREE_PB:
-            F_max = 4 * M_I[-1] / self.beam_design.L
-        elif self.beam_design.beam_conf_name == BoundaryConfig.FOUR_PB:
-            load_distance = self.beam_design.beam_conf_name.first_load_distance
-            if load_distance == 0:
-                load_distance = self.beam_design.L / 3
-            F_max = M_I[-1] / load_distance
-        elif self.beam_design.beam_conf_name == BoundaryConfig.SIMPLE_BEAM_DIST_LOAD:
-            F_max = 8 * M_I[-1] / self.beam_design.L**2
-        elif self.beam_design.beam_conf_name == BoundaryConfig.THREE_SPAN_DIST_LOAD:
-            # maximum negative moment M_I[0]
-            F_max = 10 * M_I[0] / self.beam_design.L**2  # max moment is in the 2nd support
-        elif self.beam_design.beam_conf_name == BoundaryConfig.FIXED_SUPPORT_DIST_LOAD:
-            F_max = 24 * M_I[-1] / self.beam_design.L**2 # max moment is in the span middle
-        elif self.beam_design.beam_conf_name == BoundaryConfig.FIXED_AND_ROLLER_SUPPORT_DIST_LOAD:
-            # maximum negative moment M_I[0]
-            F_max = 8 * M_I[0] / self.beam_design.L**2 # max moment is in fixed support
-        elif self.beam_design.beam_conf_name == BoundaryConfig.CANTILEVER_DIST_LOAD:
-            # maximum negative moment M_I[0]
-            F_max = 2 * M_I[0] / self.beam_design.L**2
+        F_max = self.beam_design.beam_.get_max_force(M_I)
         return abs(F_max)
-    
 
     # def run(self):
     #     F_arr = np.linspace(0, self.F_max, self.n_load_steps)

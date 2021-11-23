@@ -116,7 +116,7 @@ class BoundaryConditions(tr.HasTraits):
         L = float(beam.length)
         # ax.annotate('L = {} mm'.format(np.round(L), 0), xy=(L / 2, 5), color='black')
 
-        # Beam
+        # BeamSystem
         ax.plot([0, beam.length], [0, 0], linewidth=0.5, color='black')
 
         # supports

@@ -9,11 +9,11 @@ import Util_EC2 as EC2
 
 
 #===========================================================================
-#   Reinforced Beam
+#   Reinforced BeamSystem
 #===========================================================================
 
 class ReinforcedBeam(metaclass=ABCMeta):
-	""" Abstract Reinforced Beam Class
+	""" Abstract Reinforced BeamSystem Class
 	
 	Static Members:
 		gamma_c = 1.5
@@ -75,7 +75,7 @@ class ReinforcedBeam(metaclass=ABCMeta):
 		pass
 
 #===========================================================================
-#   Rectangular Beam
+#   Rectangular BeamSystem
 #===========================================================================
 
 

@@ -10,11 +10,11 @@ from RC import ReinforcedBeam
 
 
 #===========================================================================
-#   Prestressed Beam
+#   Prestressed BeamSystem
 #===========================================================================
 
 class PrestressedBeam(ReinforcedBeam):
-	""" Abstract Reinforced Beam Class
+	""" Abstract Reinforced BeamSystem Class
 	
 	Static Members:
 		gamma_c = 1.5
@@ -181,7 +181,7 @@ class PrestressedBeam(ReinforcedBeam):
 		pass
 
 #===========================================================================
-#   Rectangular Beam
+#   Rectangular BeamSystem
 #===========================================================================
 
 

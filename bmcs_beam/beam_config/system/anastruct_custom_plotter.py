@@ -275,7 +275,7 @@ class CustomPlotter(Plotter):
             else:
                 ai = -el.angle
 
-            # - value, because the positive z of the system is opposite of positive y of the plotter
+            # - value, because the positive z of the beam is opposite of positive y of the plotter
             xn1 = x1 + np.sin(ai) * h1 * direction
             yn1 = y1 + np.cos(ai) * h1 * direction
             xn2 = x2 + np.sin(ai) * h2 * direction
@@ -419,13 +419,13 @@ class CustomPlotter(Plotter):
         self,
         figsize,
         verbosity,
-        ax=None,
         show=False,
         supports=True,
         scale=1,
         offset=(0, 0),
         gridplot=False,
         annotations=True,
+        ax=None,
         loads=False,
         adjust_ax_width=True,
         adjust_ax_height=True,
