@@ -6,7 +6,7 @@ class CantileverDistLoadSystem(BeamSystem):
 
     name = 'CantileverDistLoadSystem'
 
-    F = Float(-5000, SYSTEM=True)
+    F = Float(-5, SYSTEM=True)
     n_x = 2
 
     tree = []
@@ -28,3 +28,7 @@ class CantileverDistLoadSystem(BeamSystem):
         # This should be done numerically, but here for efficiency and
         # because this is a known case it's given directly
         return 2 * np.min(M_I) / self.L ** 2
+
+    def get_plot_force_scale_and_unit(self):
+        """ Scale which should be applied on the force when plotting """
+        return 1, 'kN/m'

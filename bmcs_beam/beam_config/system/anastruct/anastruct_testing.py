@@ -1,6 +1,4 @@
 from anastruct import SystemElements
-import matplotlib.pyplot as plt
-from bmcs_beam.beam_config.system.anastruct_custom_plotter import CustomPlotter
 import numpy as np
 L = 1000
 F = -2000

@@ -3,7 +3,7 @@ import numpy as np
 
 from bmcs_utils.api import InteractiveModel, View, Item, Button, ButtonEditor, Float, Int, \
     mpl_align_yaxis_to_zero, mpl_show_one_legend_for_twin_axes, ParametricStudy
-from bmcs_utils.api import Model, View, Item, Button, ButtonEditor, Float, Int, \
+from bmcs_utils.api import Model, View, Item, Button, Bool, Float, Int, \
     mpl_align_yaxis, ParametricStudy
 
 from bmcs_beam.beam_config.beam_design import BeamDesign
@@ -26,15 +26,29 @@ class DeflectionProfile(Model):
     beam_design = tr.Instance(BeamDesign, ())
     mc = tr.Instance(MKappa, ())
     n_load_steps = Int(31)
+    w_SLS = Bool(False)
 
-    tree = ['beam_design','mc']
+    tree = ['beam_design', 'mc']
 
     ipw_view = View(
-        Item('n_load_steps', latex='n_{\mathrm{load~steps}}')
+        Item('n_load_steps', latex='n_{\mathrm{load~steps}}'),
+        Item('w_SLS', latex='\mathrm{SLS_{limit}}')
     )
 
     f_exp_data = tr.List
     w_exp_data = tr.List
+
+    plot_F_scale = Float(1, desc='Additional plotting scale that can be added by the user')
+
+    _plot_F_scale = tr.Property()
+    def _get__plot_F_scale(self):
+        F_scale_to_kN, _ = self.beam_design.beam_.get_plot_force_scale_and_unit()
+        return self.plot_F_scale * F_scale_to_kN
+
+    F_unit = tr.Property()
+    def _get_F_unit(self):
+        _, unit = self.beam_design.beam_.get_plot_force_scale_and_unit()
+        return unit
 
     def add_fw_exp(self, load_array, deflection_array):
         self.f_exp_data.append(load_array)
@@ -111,11 +125,11 @@ class DeflectionProfile(Model):
         #           for other loading conditions.
         #           HS: I guess this works for 4pb too (for symmetric beams)
 
-        if not isinstance(self.beam_design.beam_, SimpleDistLoadBeamSystem) \
-                and not isinstance(self.beam_design.beam_, CantileverDistLoadSystem):
+        if not isinstance(self.beam_design.beam_, CantileverDistLoadSystem):
+                # and not isinstance(self.beam_design.beam_, FixedAndRollerDistLoadBeamSystem):
             phi_x -= np.interp(self.beam_design.L / 2, self.beam_design.x, phi_x)
-        elif isinstance(self.beam_design.beam_, SimpleDistLoadBeamSystem):
-            phi_x -= phi_x[-1]
+        # elif isinstance(self.beam_design.beam_, FixedAndRollerDistLoadBeamSystem):
+        #     phi_x -= phi_x[-1]
 
         # This is a more general approach but not sure from it!
         # kappa_derivative = np.gradient(kappa_x, self.beam_design.x)
@@ -248,11 +262,12 @@ class DeflectionProfile(Model):
     def plot_fw_with_fmax(self, ax_Fw):
         self.plot_fw(ax_Fw)
         self.plot_exp_fw(ax_Fw)
-        current_F = abs(self.F_scale * self.beam_design.F)
+        current_F = abs(self._plot_F_scale * self.beam_design.F)
         w_SLS = self.beam_design.L / 250
-        ax_Fw.plot([w_SLS,w_SLS], [0,current_F], color='green')
+        if self.w_SLS:
+            ax_Fw.plot([w_SLS, w_SLS], [0, current_F], color='green')
         ax_Fw.axhline(y=current_F, color='r')
-        ax_Fw.annotate('F = {} kN'.format(round(current_F,2)), xy=(0, current_F), color='r')
+        ax_Fw.annotate('F = ' + str(round(current_F, 2)) + ' ' + self.F_unit, xy=(0, current_F), color='r')
 
     def plot_exp_fw(self, ax_Fw):
         for w, f in zip(self.w_exp_data, self.f_exp_data):
@@ -277,16 +292,13 @@ class DeflectionProfile(Model):
         ax_w.fill_between(x, 0, w_x, color='blue', alpha=0.1)
         ax_w.set_ylabel(r'$w [\mathrm{mm}]$')
 
-
-    F_scale = tr.Float(1/1000)
-
     def plot_fw(self, ax_Fw):
         # TODO: expensive calculations for all displacements are running with each plot update to produce new
         #  load-displacement curve, this shouldn't be done for example when only the force has changed
         ax_Fw.set_xlabel(r'$w_\mathrm{max}$ [mm]')
-        ax_Fw.set_ylabel(r'$F$ [kN]')
+        ax_Fw.set_ylabel(r'$F$ [' + self.F_unit + ']')
         F, w = self.get_Fw()
-        ax_Fw.plot(w, self.F_scale * F,  label='sim deflection', lw=2)
+        ax_Fw.plot(w, self._plot_F_scale * F, label='sim deflection', lw=2)
 
 
 class LoadDeflectionParamsStudy(ParametricStudy):
@@ -297,10 +309,10 @@ class LoadDeflectionParamsStudy(ParametricStudy):
 
     def plot(self, ax, title, curve_label):
         ax.set_xlabel(r'$w_\mathrm{max}$ [mm]')
-        ax.set_ylabel(r'$F$ [kN]')
+        ax.set_ylabel(r'$F$ [' + self.F_unit + ']')
         F, w = self.dp.get_Fw()
 
-        ax.plot(w, self.dp.F_scale * F, label=curve_label, lw=2)
+        ax.plot(w, self.dp._plot_F_scale * F, label=curve_label, lw=2)
 
         if self.show_sls_deflection_limit:
             limit = self.dp.beam_design.L/250

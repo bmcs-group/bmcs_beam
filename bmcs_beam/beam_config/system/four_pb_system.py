@@ -55,3 +55,7 @@ class FourPBBeamSystem(BeamSystem):
         # This should be done numerically, but here for efficiency and
         # because this is a known case it's given directly
         return np.max(M_I) / self.L_F
+
+    def get_plot_force_scale_and_unit(self):
+        """ Scale which should be applied on the force when plotting """
+        return 1/1000, 'kN'

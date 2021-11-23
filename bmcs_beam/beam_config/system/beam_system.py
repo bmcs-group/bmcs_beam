@@ -13,7 +13,7 @@ class BeamSystem(System):
         super().__init__(*args, **kw)
         self.update_struct()
 
-    L = Float(3000, SYSTEM=True)
+    L = Float(6000, SYSTEM=True)
     n_x = Int(10, desc='Number of FE elements along the beam.', SYSTEM=True)
     struct = SystemElements()
     _n_x_min = 5
@@ -49,15 +49,17 @@ class BeamSystem(System):
         ax.set_xlabel('x [mm]')
 
     def plot_shear(self, ax):
-        self.struct.plotter.shear_force(figsize=(8, 2), factor=1, adjust_ax_height=False,
+        # factor=1 is mandatory, here factor=1/1000 is applied [N->kN]
+        self.struct.plotter.shear_force(figsize=(8, 2), factor=1/1000, adjust_ax_height=False,
                                            verbosity=1, ax=ax, show=False)
-        ax.set_ylabel('Q [N]')
+        ax.set_ylabel('Q [kN]')
 
     def plot_bending_moment(self, ax):
-        # Note: factor=-1 was used to show moment according to our convention
-        self.struct.plotter.bending_moment(figsize=(8, 2), factor=-1, adjust_ax_height=False,
+        # Note: factor with (-1) was used to show moment according to our convention
+        # factor=1 is mandatory, here factor=1/10e6 is applied [Nmm->kNm]
+        self.struct.plotter.bending_moment(figsize=(8, 2), factor=-1/10e6, adjust_ax_height=False,
                                            verbosity=1, ax=ax, show=False)
-        ax.set_ylabel('M [Nmm]')
+        ax.set_ylabel('M [kNm]')
         ax.invert_yaxis()
         # M_x = np.array(self.struct.get_element_result_range(unit = "moment")) / M_scale
 
@@ -84,3 +86,7 @@ class BeamSystem(System):
         # elif self.beam_design.beam_conf_name == BoundaryConfig.FIXED_AND_ROLLER_SUPPORT_DIST_LOAD:
         #     # maximum negative moment M_I[0]
         #     F_max = 8 * M_I[0] / self.beam_design.L**2 # max moment is in fixed support
+
+    def get_plot_force_scale_and_unit(self):
+        """ Scale which should be applied on the force when plotting """
+        return NotImplementedError

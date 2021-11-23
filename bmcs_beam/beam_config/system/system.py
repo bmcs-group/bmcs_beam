@@ -1,5 +1,5 @@
 from bmcs_utils.api import Model, Int, Item, View, IntEditor
-from bmcs_beam.beam_config.system.anastruct_custom_plotter import CustomPlotter
+from bmcs_beam.beam_config.system.anastruct.anastruct_custom_plotter import CustomPlotter
 import traits.api as tr
 from anastruct import SystemElements
 
