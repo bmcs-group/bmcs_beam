@@ -56,8 +56,8 @@ class BeamSystem(System):
 
     def plot_bending_moment(self, ax):
         # Note: factor with (-1) was used to show moment according to our convention
-        # factor=1 is mandatory, here factor=1/10e6 is applied [Nmm->kNm]
-        self.struct.plotter.bending_moment(figsize=(8, 2), factor=-1/10e6, adjust_ax_height=False,
+        # factor=1 is mandatory, here factor=1/1e6 is applied [Nmm->kNm]
+        self.struct.plotter.bending_moment(figsize=(8, 2), factor=-1/1e6, adjust_ax_height=False,
                                            verbosity=1, ax=ax, show=False)
         ax.set_ylabel('M [kNm]')
         ax.invert_yaxis()

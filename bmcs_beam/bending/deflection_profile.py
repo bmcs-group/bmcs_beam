@@ -309,7 +309,7 @@ class LoadDeflectionParamsStudy(ParametricStudy):
 
     def plot(self, ax, title, curve_label):
         ax.set_xlabel(r'$w_\mathrm{max}$ [mm]')
-        ax.set_ylabel(r'$F$ [' + self.F_unit + ']')
+        ax.set_ylabel(r'$F$ [' + self.dp.F_unit + ']')
         F, w = self.dp.get_Fw()
 
         ax.plot(w, self.dp._plot_F_scale * F, label=curve_label, lw=2)

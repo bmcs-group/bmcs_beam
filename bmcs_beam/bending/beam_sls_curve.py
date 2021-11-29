@@ -101,6 +101,7 @@ class BeamSLSCurve(bu.Model):
     @tr.observe('rein_type')
     @tr.observe('use_f_ctm_fl')
     def _update_dp(self, event):
+        print('dp updated!')
         self.dp = self._get_dp()
 
     ipw_view = bu.View(
