@@ -199,7 +199,7 @@ class BeamSLSCurve(bu.Model):
         dp = DeflectionProfile(mc=mc)
         if self.system_type == '4pb':
             dp.beam_design.system = '4pb'
-            dp.beam_design.beam_.L_F = dp.beam_design.beam_.L/3
+            dp.beam_design.system_.L_F = L/3
         elif self.system_type == '3pb':
             dp.beam_design.system = '3pb'
         elif self.system_type == 'dist':
