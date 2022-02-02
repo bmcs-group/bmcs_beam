@@ -31,4 +31,7 @@ class CantileverDistLoadSystem(BeamSystem):
 
     def get_plot_force_scale_and_unit(self):
         """ Scale which should be applied on the force when plotting """
-        return 1, 'kN/m'
+        # Total load
+        return 1 * self.L/1000, 'kN'
+        # kN/m load
+        # return 1, 'kN/m'

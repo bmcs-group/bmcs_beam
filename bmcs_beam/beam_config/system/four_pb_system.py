@@ -8,17 +8,17 @@ class FourPBSystem(BeamSystem):
     name = 'FourPBSystem'
 
     F = Float(-1000, SYSTEM=True)
-    L_F = Float(1000, desc='length from support to the force', SYSTEM=True)
+    L_F = Float(2000, desc='length from support to the force', SYSTEM=True)
+    """ L_F defaults to L/3, if you want to change it, change it AFTER setting L"""
 
     _n_x_min = 3
     n_x = 3
 
     tree = []
 
-    # @tr.observe('L_F')
-    # def check_L_F_max(self, event):
-    #     if self.L_F > self.L/2 - 1:
-    #         self.L_F = self.L/2 - 1
+    @tr.observe('L')
+    def update_L_F(self, event):
+        self.L_F = self.L/3
 
     ipw_view = View(
         *BeamSystem.ipw_view.content,
@@ -58,4 +58,4 @@ class FourPBSystem(BeamSystem):
 
     def get_plot_force_scale_and_unit(self):
         """ Scale which should be applied on the force when plotting """
-        return 1/1000, 'kN'
+        return 2/1000, 'kN'

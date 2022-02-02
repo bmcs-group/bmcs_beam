@@ -71,7 +71,7 @@ class BeamSLSCurve(bu.Model):
     # dp properties:
     apply_material_factors = bu.Bool(False)
     system_type = bu.Str('dist')  # system_type can be '4pb' or '3pb' or 'dist'
-    concrete_law = bu.Str('EC2')  # or 'piecewise linear' or 'EC2 with plateau'
+    concrete_law = bu.Str('EC2 with plateau')  # or 'piecewise linear' or 'EC2'
     f_ck = bu.Float(103-8) # Concrete C3, f_cm = 103
     rein_type = bu.Str('steel') # can be 'carbon_grid', 'carbon_rebars'
     use_f_ctm_fl = bu.Bool(True)
@@ -98,10 +98,10 @@ class BeamSLSCurve(bu.Model):
     @tr.observe('system_type')
     @tr.observe('concrete_law')
     @tr.observe('f_ck')
+    @tr.observe('f_ctm') # Changes on f_ctm (a Property) are not triggering this!
     @tr.observe('rein_type')
     @tr.observe('use_f_ctm_fl')
     def _update_dp(self, event):
-        print('dp updated!')
         self.dp = self._get_dp()
 
     ipw_view = bu.View(
@@ -118,6 +118,7 @@ class BeamSLSCurve(bu.Model):
         bu.Item('system_type', latex='\mathrm{System}'),
         bu.Item('concrete_law', latex='\mathrm{concrete~law}'),
         bu.Item('f_ck', latex='f_{ck}'),
+        bu.Item('f_ctm', latex='f_{ctm}', editor=bu.FloatEditor()),
         bu.Item('rein_type', latex='\mathrm{Rein~type}'),
         # bu.Item('slenderness_range', latex='l/d', editor=bu.IntRangeEditor(value=(10, 35), low_name='slenderness_low', high_name='slenderness_high', n_steps_name='')),
         time_editor=bu.ProgressEditor(
@@ -129,7 +130,21 @@ class BeamSLSCurve(bu.Model):
         )
     )
 
+    _f_ctm = None
+    f_ctm = tr.Property(desc='Concrete tensile strength')
+    def _set_f_ctm(self, value):
+        self._f_ctm = value
+
+        # TODO: this update is a quick fix! tr.observe for f_ctm is not working to update dp
+        self.dp = self._get_dp()
+    def _get_f_ctm(self):
+        if self._f_ctm is not None:
+            return self._f_ctm
+        else:
+            return EC2.get_f_ctm(self.f_ck)
+
     def _get_dp(self):
+        print('dp updated!')
         b = 1000
         h = 300
         d = 0.9 * h
@@ -138,17 +153,18 @@ class BeamSLSCurve(bu.Model):
 
         E = EC2.get_E_cm(f_ck)
         f_ctm_fl = EC2.get_f_ctm_fl(f_ck, h)
-        f_ctm = EC2.get_f_ctm(f_ck)
 
-        eps_cr = f_ctm_fl / E if self.use_f_ctm_fl else f_ctm / E
+        f_ct = f_ctm_fl if self.use_f_ctm_fl else self.f_ctm
+        # Unfactor tensile strength (like El-Gha, where f_ctm is used)
+        eps_cr = (1.5/0.85) * f_ct / E if self.apply_material_factors else f_ct / E
 
-        # Info: eps_cr =  0.000170 with default concrete law gives good slenderness curve
         mc = MKappa(low_kappa=0, high_kappa=0.00007, n_kappa=100)
         mc.cs_design.matrix = self.concrete_law
         mc.cs_design.matrix_.trait_set(
             factor=0.85 / 1.5 if self.apply_material_factors else 1,
             eps_cr=eps_cr,
             eps_tu=eps_cr,
+            mu=0.0,
         )
 
         if self.concrete_law == 'EC2 with plateau' or self.concrete_law == 'EC2':
@@ -161,7 +177,7 @@ class BeamSLSCurve(bu.Model):
                 eps_cu=EC2.get_eps_cu3(f_ck),
             )
 
-        # The default uses f_ctm. Here, I will use f_ctm_fl (in EC2, they tested with both)
+        # # The default uses f_ctm. Here, I will use f_ctm_fl (in EC2, they tested with both)
         # mc.cs_design.matrix_.eps_cr = (EC2.get_f_ctm_fl(f_ck, h) * 1.5 / 0.85) / mc.cs_design.matrix_.E_ct
         # mc.cs_design.matrix_.eps_tu = (EC2.get_f_ctm_fl(f_ck, h) * 1.5 / 0.85) / mc.cs_design.matrix_.E_ct
 
@@ -199,7 +215,6 @@ class BeamSLSCurve(bu.Model):
         dp = DeflectionProfile(mc=mc)
         if self.system_type == '4pb':
             dp.beam_design.system = '4pb'
-            dp.beam_design.system_.L_F = L/3
         elif self.system_type == '3pb':
             dp.beam_design.system = '3pb'
         elif self.system_type == 'dist':
@@ -212,8 +227,9 @@ class BeamSLSCurve(bu.Model):
     def run(self, update_progress=lambda t: t):
         print('run started...')
         F_u_grid, F_s_grid, rho_grid, sl_grid = self.get_Fu_and_Fs()
-        self._plot_with_ec2_curves(F_u_grid, F_s_grid, rho_grid, sl_grid,
-                                   self.ax1 if hasattr(self, 'ax1') else None)
+        self.plot_with_ec2_curves(F_u_grid, F_s_grid, rho_grid, sl_grid,
+                                  self.ax1 if hasattr(self, 'ax1') else None)
+
         print('run finished...')
 
     def reset(self):
@@ -230,7 +246,7 @@ class BeamSLSCurve(bu.Model):
             axes.plot(self.rho_slider, sl, color='orange', marker='o')
         if hasattr(self, 'F_u_grid'):
             if len(self.F_u_grid) != 0:
-                self._plot_with_ec2_curves(self.F_u_grid, self.F_s_grid, self.rho_grid, self.sl_grid, axes)
+                self.plot_with_ec2_curves(self.F_u_grid, self.F_s_grid, self.rho_grid, self.sl_grid, axes)
 
     # not used
     def save(self):
@@ -264,12 +280,7 @@ class BeamSLSCurve(bu.Model):
         with open(path, 'w') as outfile:
             json.dump(output_data, outfile, sort_keys=True, indent=4)
 
-    F_data_array = tr.List()
-    w_data_array = tr.List()
-
     def get_Fu_and_Fs(self, upper_reinforcement=False, plot=False):
-        self.F_data_array = []
-        self.w_data_array = []
 
         slenderness_range = self.slenderness_range
         rho_range = self.rho_range
@@ -286,6 +297,7 @@ class BeamSLSCurve(bu.Model):
         rho_grid, sl_grid = np.meshgrid(rho_range, slenderness_range)
         F_u_grid = np.zeros_like(rho_grid)
         F_s_grid = np.zeros_like(rho_grid)
+        F_u_shear_grid = np.zeros_like(rho_grid)
 
         if plot:
             _, ax = plt.subplots()
@@ -314,27 +326,29 @@ class BeamSLSCurve(bu.Model):
 
                 # running the deflection analysis
                 F_data, w_data = dp.get_Fw()
-                self.F_data_array.append(F_data)
-                self.w_data_array.append(w_data)
+                F_data = F_data * dp.final_plot_F_scale
 
                 # plotting, post-processing & saving the data
                 if plot:
-                    ax.plot(w_data, F_data / 1000, label="rho={}%-sl={} ".format(rho * 100, sl))
+                    ax.plot(w_data, F_data, label="rho={}%-sl={} ".format(rho * 100, sl))
 
                 w_s = dp.beam_design.system_.L / 250
                 F_u = max(F_data)
                 F_s = np.interp(w_s, w_data, F_data, right=F_u * 2)
 
+                if dp.shear_force_can_be_calculated():
+                    F_u_shear_grid[rho_idx, sl_idx] = dp.get_nm_shear_force_capacity()
                 F_u_grid[rho_idx, sl_idx] = F_u
                 F_s_grid[rho_idx, sl_idx] = F_s
 
+        self.F_u_shear_grid = F_u_shear_grid
         self.F_u_grid = F_u_grid
         self.F_s_grid = F_s_grid
         self.rho_grid = rho_grid
         self.sl_grid = sl_grid
         return F_u_grid, F_s_grid, rho_grid, sl_grid
 
-    def _plot_with_ec2_curves(self, F_u_grid, F_s_grid, rho_grid, sl_grid, ax=None, label=None):
+    def plot_with_ec2_curves(self, F_u_grid, F_s_grid, rho_grid, sl_grid, ax=None, label=None):
         if not ax:
             fig, ax = plt.subplots()
 
@@ -390,6 +404,9 @@ class BeamSLSCurve(bu.Model):
         ax.grid(color='#e6e6e6', linewidth=0.7)
         ax.legend()
 
+        if not ax:
+            fig.show()
+
     @staticmethod
     def get_slenderness_limit(rho, f_ck, rho_p=0, K=1):
         # see EC2, see eqs 7.16
@@ -400,6 +417,23 @@ class BeamSLSCurve(bu.Model):
         else:
             return K * (11 + 1.5 * ((f_ck) ** 0.5) * (rho_0 / (rho - rho_p)) + (1 / 12) * (f_ck ** 0.5) * (
                     (rho_p / rho_0) ** 0.5))
+
+    def plot_F_u(self, load='bending', bending_shear_diff=False):
+        fig, ax = plt.subplots()
+        if bending_shear_diff:
+            z = self.F_u_shear_grid - self.F_u_grid
+        else:
+            z = self.F_u_grid if load == 'bending' else self.F_u_shear_grid
+        levels = [0, 10, 20, 30, 40, 50, 65, 80, 100, 150, 300, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, -10,
+                  -20, -30, -40, -50, -65, -80, -100, -150, -300, -1000, -2000, -3000, -4000, -5000, -6000, -7000,
+                  -8000]
+        levels.sort()
+        cs = ax.contour(self.rho_grid, self.sl_grid, z, levels=levels)
+        cs_shade = ax.contourf(self.rho_grid, self.sl_grid, z, levels=[-1e6, 0], colors=['lightgray', 'white'])
+        ax.clabel(cs, inline=True, fontsize=10)
+        # sls.sls_to_uls_ratio = 0.59
+        # sls._plot_with_ec2_curves(0.3*sls.F_u_grid, sls.F_s_grid, sls.rho_grid, sls.sl_grid, ax=ax)
+        fig.show()
 
 
 class SLSParamStudy(bu.ParametricStudy):
@@ -413,7 +447,7 @@ class SLSParamStudy(bu.ParametricStudy):
         self.b_sls.dp.mc.state_changed = True
 
         F_u_grid, F_s_grid, rho_grid, sl_grid = self.b_sls.get_Fu_and_Fs()
-        self.b_sls._plot_with_ec2_curves(F_u_grid, F_s_grid, rho_grid, sl_grid, ax, label=param_name_value)
+        self.b_sls.plot_with_ec2_curves(F_u_grid, F_s_grid, rho_grid, sl_grid, ax, label=param_name_value)
         ax.set_title(plot_title + ' effect')
         ax.legend()
 
