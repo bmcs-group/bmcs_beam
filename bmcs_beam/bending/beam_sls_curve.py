@@ -12,6 +12,12 @@ from bmcs_cross_section.api import MKappa, EC2, ReinfLayer
 from matplotlib.ticker import PercentFormatter
 import math
 
+plt.rcParams["font.family"] = "Times New Roman"
+plt.rcParams["font.size"] = 15
+# To have math like LaTeX
+plt.rcParams['mathtext.fontset'] = 'cm'
+plt.rcParams['mathtext.rm'] = 'serif'
+
 class BeamSLSCurve(bu.Model):
     name = 'Beam SLS Curve'
 
@@ -22,7 +28,7 @@ class BeamSLSCurve(bu.Model):
       which makes it introspectable.
     '''
 
-    sls_to_uls_ratio = bu.Float(0.59)
+    sls_to_uls_ratio = bu.Float(0.51)
     slenderness_min = bu.Int(3)
     slenderness_max = bu.Int(50)
     rho_min = bu.Float(0.0002)
@@ -71,7 +77,7 @@ class BeamSLSCurve(bu.Model):
     # dp properties:
     apply_material_factors = bu.Bool(False)
     system_type = bu.Str('dist')  # system_type can be '4pb' or '3pb' or 'dist'
-    concrete_law = bu.Str('EC2 with plateau')  # or 'piecewise linear' or 'EC2'
+    concrete_law = bu.Str('EC2')  # or 'piecewise linear' or 'EC2 with plateau'
     f_ck = bu.Float(103-8) # Concrete C3, f_cm = 103
     rein_type = bu.Str('steel') # can be 'carbon_grid', 'carbon_rebars'
     use_f_ctm_fl = bu.Bool(True)
@@ -84,8 +90,8 @@ class BeamSLSCurve(bu.Model):
     def _update_dp_according_to_rho(self, event):
         if len(self.rho) != 0:
             dp = self.dp
-            area = dp.mc.cross_section_shape_.get_cs_area()
-            A_s = self.rho_slider * area
+            bd = dp.mc.get_bd()
+            A_s = self.rho_slider * bd
             dp.mc.cross_section_layout.items[0].A = A_s
 
             sl = np.interp(self.rho_slider, self.rho, self.sl)
@@ -292,7 +298,7 @@ class BeamSLSCurve(bu.Model):
         else:
             d = dp.mc.cross_section_shape_.H - dp.mc.cross_section_layout.items[0].z
 
-        area_g = dp.mc.cross_section_shape_.get_cs_area()
+        bd = dp.mc.get_bd(upper_reinforcement = upper_reinforcement)
 
         rho_grid, sl_grid = np.meshgrid(rho_range, slenderness_range)
         F_u_grid = np.zeros_like(rho_grid)
@@ -315,7 +321,7 @@ class BeamSLSCurve(bu.Model):
                 print('parameter combination', rho, sl)
 
                 # assigning the grid area (area_g) to the reinforcement area variable
-                A_j_g = rho * area_g
+                A_j_g = rho * bd
                 dp.mc.cross_section_layout.items[0].A = A_j_g
 
                 # assigning the grid length (L_g) to the beam length variable
@@ -391,10 +397,10 @@ class BeamSLSCurve(bu.Model):
             slenderness = []
 
         if axes_start_from_zero:
-            ax.set_ylim(0, 35)
+            ax.set_ylim(0, self.slenderness_max)
             ax.set_xlim(0, rho_range[-1])
         else:
-            ax.set_ylim(10, 35)
+            ax.set_ylim(10, self.slenderness_max)
             ax.set_xlim(rho_range[0], rho_range[-1])
 
         ax.xaxis.set_major_formatter(PercentFormatter(xmax=1))
@@ -418,22 +424,42 @@ class BeamSLSCurve(bu.Model):
             return K * (11 + 1.5 * ((f_ck) ** 0.5) * (rho_0 / (rho - rho_p)) + (1 / 12) * (f_ck ** 0.5) * (
                     (rho_p / rho_0) ** 0.5))
 
-    def plot_F_u(self, load='bending', bending_shear_diff=False):
+    def plot_F_u(self, load='bending', bending_shear_diff=False, scale=1, levels=None, sls=None):
         fig, ax = plt.subplots()
-        if bending_shear_diff:
+        fig.set_size_inches(5.5, 4.5)
+
+        if sls is not None:
+            z = self.F_u_grid/sls.F_u_grid
+            levels = np.linspace(0, 5, 11)
+            # z = self.F_u_grid - sls.F_u_grid
+        elif bending_shear_diff:
             z = self.F_u_shear_grid - self.F_u_grid
         else:
-            z = self.F_u_grid if load == 'bending' else self.F_u_shear_grid
-        levels = [0, 10, 20, 30, 40, 50, 65, 80, 100, 150, 300, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, -10,
-                  -20, -30, -40, -50, -65, -80, -100, -150, -300, -1000, -2000, -3000, -4000, -5000, -6000, -7000,
-                  -8000]
+            z = self.F_u_grid * scale if load == 'bending' else self.F_u_shear_grid * scale
+        if levels is None:
+            levels = [0, 10, 20, 30, 40, 60, 80, 100, 150, 300, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, -10,
+                      -20, -30, -40, -60, -80, -100, -150, -300, -1000, -2000, -3000, -4000, -5000, -6000, -7000,
+                      -8000]
+            levels = np.array(levels) * scale
         levels.sort()
-        cs = ax.contour(self.rho_grid, self.sl_grid, z, levels=levels)
+        cs = ax.contour(self.rho_grid, self.sl_grid, z, levels=levels) #cmap='RdYlBu_r', cmap='turbo', cmap='rainbow'
         cs_shade = ax.contourf(self.rho_grid, self.sl_grid, z, levels=[-1e6, 0], colors=['lightgray', 'white'])
-        ax.clabel(cs, inline=True, fontsize=10)
+        ax.clabel(cs, inline=True, fontsize=14)
         # sls.sls_to_uls_ratio = 0.59
         # sls._plot_with_ec2_curves(0.3*sls.F_u_grid, sls.F_s_grid, sls.rho_grid, sls.sl_grid, ax=ax)
-        fig.show()
+
+        ax.xaxis.set_major_formatter(PercentFormatter(xmax=1))
+        ax.set_ylabel(r'$L/d$')
+        ax.set_xlabel(r'Reinforcement ratio $\rho$')
+        ax.set_title(r'Contour lines of maximum load $F_\mathrm{max}$ [kN]') # where F_max = ql
+        ax.grid(color='#e6e6e6', linewidth=0.7)
+        ax.set_ylim(ymin=0)
+        ax.set_xlim(xmin=0)
+        # ax.legend()
+
+        # fig.show()
+
+        return fig
 
 
 class SLSParamStudy(bu.ParametricStudy):
@@ -461,37 +487,37 @@ class SLSParamStudy(bu.ParametricStudy):
         np.save(os.path.join(out_dir, 'sl_grid' + '_' + self.b_sls.rein_type + '__' + param_name_value + '.npy'),
                 sl_grid)
 
-    # to be updated
-    def plot_all_curves(self):
-        f_cks = [50]
-        F_u_grids = []
-        F_s_grids = []
-        rho_grids = []
-        sl_grids = []
-        reinforcement = 'carbon'
-        for f_ck in f_cks:
-            f_ck = str(f_ck)
-            F_u_grids.append(
-                np.load('exported_data/F_u_grid_carbon_EC2_eq2_tension_E230_ft_3000_c' + str(f_ck) + '.npy'))
-            F_s_grids.append(
-                np.load('exported_data/F_s_grid_carbon_EC2_eq2_tension_E230_ft_3000_c' + str(f_ck) + '.npy'))
-            rho_grids.append(
-                np.load('exported_data/rho_grid_carbon_EC2_eq2_tension_E230_ft_3000_c' + str(f_ck) + '.npy'))
-            sl_grids.append(np.load('exported_data/sl_grid_carbon_EC2_eq2_tension_E230_ft_3000_c' + str(f_ck) + '.npy'))
-
-        _, ax = plt.subplots(1, 1)
-
-        ax.set_ylabel('L/d')
-        ax.set_xlabel(r'$\rho$ %')
-        ax.set_ylim(0, 35)
-        ax.set_xlim(0.0, 0.025)
-
-        for f_ck, F_u_grid, F_s_grid, rho_grid, sl_grid in zip(f_cks, F_u_grids, F_s_grids, rho_grids, sl_grids):
-            z = 0.5 * F_u_grid / F_s_grid - 1. / 0.59
-            CS = ax.contour(rho_grid, sl_grid, z, colors=[np.random.rand(3, )], levels=[0])
-            CS.collections[0].set_label('C' + str(f_ck))
-            #     ax.clabel(CS, inline=1, fontsize=10)
-
-            BeamSLSCurve().plot_steel_sls_curves(ax=ax, f_cks=[50], axes_start_from_zero=True)
-
-        ax.legend()
+    # # to be updated
+    # def plot_all_curves(self):
+    #     f_cks = [50]
+    #     F_u_grids = []
+    #     F_s_grids = []
+    #     rho_grids = []
+    #     sl_grids = []
+    #     reinforcement = 'carbon'
+    #     for f_ck in f_cks:
+    #         f_ck = str(f_ck)
+    #         F_u_grids.append(
+    #             np.load('exported_data/F_u_grid_carbon_EC2_eq2_tension_E230_ft_3000_c' + str(f_ck) + '.npy'))
+    #         F_s_grids.append(
+    #             np.load('exported_data/F_s_grid_carbon_EC2_eq2_tension_E230_ft_3000_c' + str(f_ck) + '.npy'))
+    #         rho_grids.append(
+    #             np.load('exported_data/rho_grid_carbon_EC2_eq2_tension_E230_ft_3000_c' + str(f_ck) + '.npy'))
+    #         sl_grids.append(np.load('exported_data/sl_grid_carbon_EC2_eq2_tension_E230_ft_3000_c' + str(f_ck) + '.npy'))
+    #
+    #     _, ax = plt.subplots(1, 1)
+    #
+    #     ax.set_ylabel('L/d')
+    #     ax.set_xlabel(r'$\rho$ %')
+    #     ax.set_ylim(0, self.slenderness_max)
+    #     ax.set_xlim(0.0, self.rho_max)
+    #
+    #     for f_ck, F_u_grid, F_s_grid, rho_grid, sl_grid in zip(f_cks, F_u_grids, F_s_grids, rho_grids, sl_grids):
+    #         z = 0.5 * F_u_grid / F_s_grid - 1. / self.b_sls.sls_to_uls_ratio
+    #         CS = ax.contour(rho_grid, sl_grid, z, colors=[np.random.rand(3, )], levels=[0])
+    #         CS.collections[0].set_label('C' + str(f_ck))
+    #         #     ax.clabel(CS, inline=1, fontsize=10)
+    #
+    #         BeamSLSCurve().plot_steel_sls_curves(ax=ax, f_cks=[50], axes_start_from_zero=True)
+    #
+    #     ax.legend()
