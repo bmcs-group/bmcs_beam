@@ -12,6 +12,7 @@ dependencies:
 - openpyxl
 - ipywidgets
 - ipympl
+- shapely
 - pip
 - pip:
   - anastruct==1.2.0
