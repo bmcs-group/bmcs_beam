@@ -13,7 +13,7 @@ class CantileverDistLoadSystem(BeamSystem):
 
     ipw_view = View(
         *BeamSystem.ipw_view.content,
-        Item('F', latex='F \mathrm{[kN/m]}'), # kN/m = N/mm
+        Item('F', latex='F \mathrm{[kN/m]}', readonly=True), # kN/m = N/mm
     )
 
     def update_struct(self):

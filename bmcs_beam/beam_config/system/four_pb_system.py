@@ -22,7 +22,7 @@ class FourPBSystem(BeamSystem):
 
     ipw_view = View(
         *BeamSystem.ipw_view.content,
-        Item('F', latex='F \mathrm{[N]}'),
+        Item('F', latex='F \mathrm{[N]}', readonly=True),
         Item('L_F', latex='L_F \mathrm{[N]}', editor=FloatEditor(min=4)),
     )
 
