@@ -40,8 +40,8 @@ class DeflectionProfile(Model):
 
     plot_F_scale = Float(1, desc='Additional plotting scale that can be added by the user')
 
-    _plot_F_scale = tr.Property()
-    def _get__plot_F_scale(self):
+    final_plot_F_scale = tr.Property()
+    def _get_final_plot_F_scale(self):
         F_scale_to_kN, _ = self.beam_design.system_.get_plot_force_scale_and_unit()
         return self.plot_F_scale * F_scale_to_kN
 
@@ -262,12 +262,18 @@ class DeflectionProfile(Model):
     def plot_fw_with_fmax(self, ax_Fw):
         self.plot_fw(ax_Fw)
         self.plot_exp_fw(ax_Fw)
-        current_F = abs(self._plot_F_scale * self.beam_design.system_.F)
+        current_F = abs(self.final_plot_F_scale * self.beam_design.system_.F)
         w_SLS = self.beam_design.system_.L / 250
         if self.w_SLS:
             ax_Fw.plot([w_SLS, w_SLS], [0, current_F], color='green')
         ax_Fw.axhline(y=current_F, color='r')
-        ax_Fw.annotate('F = ' + str(round(current_F, 2)) + ' ' + self.F_unit, xy=(0, current_F), color='r')
+        ax_Fw.annotate(r'$F_{\mathrm{tot,~max}} = $' + str(round(current_F, 2)) + ' ' + self.F_unit, xy=(0, 1.02 * current_F), color='r')
+
+        if self.shear_force_can_be_calculated():
+            self.get_nm_shear_force_capacity(should_print=True)
+
+    def shear_force_can_be_calculated(self):
+        return self.mc.cross_section_layout.items[0].matmod == 'carbon' and self.mc.cross_section_shape == 'rectangle'
 
     def plot_exp_fw(self, ax_Fw):
         for w, f in zip(self.w_exp_data, self.f_exp_data):
@@ -296,9 +302,40 @@ class DeflectionProfile(Model):
         # TODO: expensive calculations for all displacements are running with each plot update to produce new
         #  load-displacement curve, this shouldn't be done for example when only the force has changed
         ax_Fw.set_xlabel(r'$w_\mathrm{max}$ [mm]')
-        ax_Fw.set_ylabel(r'$F$ [' + self.F_unit + ']')
+        ax_Fw.set_ylabel(r'$F_{\mathrm{tot}}$ [' + self.F_unit + ']')
         F, w = self.get_Fw()
-        ax_Fw.plot(w, self._plot_F_scale * F, label='sim deflection', lw=2)
+        ax_Fw.plot(w, self.final_plot_F_scale * F, label='sim deflection', lw=2)
+
+    def get_nm_shear_force_capacity(self, should_print=False):
+        # This works only for 4pb and dist and one layer of reinforcement
+        system = self.beam_design.system
+        mc = self.mc
+        if system != '4pb' and system != 'simple_beam_dist_load':
+            return
+        if mc.cross_section_layout.items[0].matmod != 'carbon':
+            return
+
+        z = mc.cross_section_layout.items[0].z
+        A_nm = mc.cross_section_layout.items[0].A
+        E_nm = mc.cross_section_layout.items[0].matmod_.E
+        d = mc.cross_section_shape_.H - z
+        b = mc.cross_section_shape_.B
+        L = self.beam_design.system_.L
+        f_ck = mc.cs_design.matrix_.f_cm
+
+        C_Rk_c = 0.219
+        gamma = 1
+        k = 1 / (1 + d / 200) ** 0.5
+        rho_nm_l = A_nm / (b * d)
+        lambda_ = L / (4 * d) if system == 'simple_beam_dist_load' else self.beam_design.system_.L_F / d
+        exp = 1
+        k_lambda = 1 + 2.825 * np.exp(-(lambda_) / 4.538) if system == 'simple_beam_dist_load' else 1 + 2.824 * np.exp(
+            -(lambda_ - 1) / 4.538)
+        V_Rm_c = C_Rk_c / gamma * k * k_lambda * (100 * E_nm / 200000 * rho_nm_l * f_ck) ** (1 / 3) * exp * b * d / 1000
+        V_Rm_c_rounded = np.round(V_Rm_c, 2)
+        if should_print:
+            print('V_Rm_c = ' + str(V_Rm_c_rounded) + ' kN, Shear failure by F_tot_max = ' + str(2 * V_Rm_c_rounded) + ' kN')
+        return 2 * V_Rm_c
 
 
 class LoadDeflectionParamsStudy(ParametricStudy):
@@ -312,7 +349,7 @@ class LoadDeflectionParamsStudy(ParametricStudy):
         ax.set_ylabel(r'$F$ [' + self.dp.F_unit + ']')
         F, w = self.dp.get_Fw()
 
-        ax.plot(w, self.dp._plot_F_scale * F, label=curve_label, lw=2)
+        ax.plot(w, self.dp.final_plot_F_scale * F, label=curve_label, lw=2)
 
         if self.show_sls_deflection_limit:
             limit = self.dp.beam_design.system_.L/250

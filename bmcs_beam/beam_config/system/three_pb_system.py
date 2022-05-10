@@ -13,7 +13,7 @@ class ThreePBSystem(BeamSystem):
 
     ipw_view = View(
         *BeamSystem.ipw_view.content,
-        Item('F', latex='F \mathrm{[N]}'),
+        Item('F', latex='F \mathrm{[N]}', readonly=True),
     )
 
     def update_struct(self):
