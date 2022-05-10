@@ -25,7 +25,14 @@ class BeamDesign(CrossSectionDesign):
                                  ])
 
     tree = []
-    # L = tr.DelegatesTo('system_')
+
+    L = tr.Property(depends_on='system, state_changed')
+    @tr.cached_property
+    def _get_L(self):
+        return self.system_.L
+    def _set_L(self, L):
+        self.system_.L = L
+
     # F = tr.DelegatesTo('system_')
     # x = tr.DelegatesTo('system_')
 
