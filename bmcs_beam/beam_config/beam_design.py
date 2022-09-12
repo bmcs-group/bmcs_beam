@@ -24,9 +24,10 @@ class BeamDesign(CrossSectionDesign):
                                  # ('single_moment', CarbonReinfMatMod),
                                  ])
 
-    tree = []
+    depends_on = ['matrix', 'cross_section_layout', 'cross_section_shape', 'system']
+    ipw_tree = ['system']
 
-    L = tr.Property(depends_on='system, state_changed')
+    L = tr.Property(depends_on='state_changed')
     @tr.cached_property
     def _get_L(self):
         return self.system_.L

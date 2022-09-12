@@ -6,6 +6,8 @@ from bmcs_utils.api import InteractiveModel, View, Item, Button, ButtonEditor, F
 from bmcs_utils.api import Model, View, Item, Button, Bool, Float, Int, \
     mpl_align_yaxis, ParametricStudy
 
+import bmcs_utils.api as bu
+
 from bmcs_beam.beam_config.beam_design import BeamDesign
 from bmcs_cross_section.mkappa import MKappa
 from scipy.integrate import cumtrapz
@@ -23,8 +25,8 @@ class DeflectionProfile(Model):
 
     name = 'Deflection Profile'
 
-    beam_design = tr.Instance(BeamDesign, ())
-    mc = tr.Instance(MKappa, ())
+    beam_design = bu.Instance(BeamDesign, ())
+    mc = bu.Instance(MKappa, ())
     n_load_steps = Int(31)
     w_SLS = Bool(False)
 
@@ -158,7 +160,7 @@ class DeflectionProfile(Model):
         #     w_x += w_x[0]
         return w_x
 
-    theta_max = tr.Float(1)
+    theta_max = Float(1)
 
     F_max = tr.Property(Float)
     ''''
@@ -273,7 +275,10 @@ class DeflectionProfile(Model):
             self.get_nm_shear_force_capacity(should_print=True)
 
     def shear_force_can_be_calculated(self):
-        return self.mc.cross_section_layout.items[0].matmod == 'carbon' and self.mc.cross_section_shape == 'rectangle'
+        # WHY does it have to be carbon here?
+        values = list(self.mc.cross_section_layout.items.values())
+        return values[0].matmod == 'carbon' \
+               and self.mc.cross_section_shape == 'rectangle'
 
     def plot_exp_fw(self, ax_Fw):
         for w, f in zip(self.w_exp_data, self.f_exp_data):
