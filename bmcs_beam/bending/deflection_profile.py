@@ -298,13 +298,13 @@ class DeflectionProfile(Model):
         ax_w.fill_between(x, 0, w_x, color='blue', alpha=0.1)
         ax_w.set_ylabel(r'$w [\mathrm{mm}]$')
 
-    def plot_fw(self, ax_Fw):
+    def plot_fw(self, ax_Fw, dashed=False, color='#1f77b4'):
         # TODO: expensive calculations for all displacements are running with each plot update to produce new
         #  load-displacement curve, this shouldn't be done for example when only the force has changed
         ax_Fw.set_xlabel(r'$w_\mathrm{max}$ [mm]')
         ax_Fw.set_ylabel(r'$F_{\mathrm{tot}}$ [' + self.F_unit + ']')
         F, w = self.get_Fw()
-        ax_Fw.plot(w, self.final_plot_F_scale * F, label='sim deflection', lw=2)
+        ax_Fw.plot(w, self.final_plot_F_scale * F, '--' if dashed else '-', c=color, label='Sim.', lw=2)
 
     def get_nm_shear_force_capacity(self, should_print=False):
         # This works only for 4pb and dist and one layer of reinforcement
