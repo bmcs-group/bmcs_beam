@@ -30,6 +30,7 @@ class DeflectionProfile(Model):
     n_load_steps = Int(31)
     w_SLS = Bool(False)
 
+    depends_on = ['beam_design', 'mc']
     tree = ['beam_design', 'mc']
 
     ipw_view = View(
