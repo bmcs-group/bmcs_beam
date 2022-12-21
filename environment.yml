@@ -13,6 +13,7 @@ dependencies:
 - ipywidgets
 - ipympl
 - shapely
+- ipytree
 - pip
 - pip:
   - anastruct==1.2.0
