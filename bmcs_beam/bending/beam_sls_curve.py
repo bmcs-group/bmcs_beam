@@ -11,6 +11,7 @@ from bmcs_beam.api import BoundaryConfig, DeflectionProfile
 from bmcs_cross_section.api import MKappa, EC2, ReinfLayer
 from matplotlib.ticker import PercentFormatter
 import math
+import copy
 
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams["font.size"] = 15
@@ -37,9 +38,14 @@ class BeamSLSCurve(bu.Model):
     dp = bu.Instance(DeflectionProfile)
 
     def _dp_default(self):
-        return self._get_dp()
+        return self._get_dp_and_update_dp_design()
 
-    tree = ['dp']
+    dp_design = bu.Instance(DeflectionProfile)
+    def _dp_design_default(self):
+        return self.dp_design
+
+    tree = ['dp', 'dp_design']
+    # tree = ['dp']
 
     n_i = bu.Int(3)
     dense_quarter = bu.Bool
@@ -85,20 +91,35 @@ class BeamSLSCurve(bu.Model):
     rho = [] # final rho array (corresponds to contour on level 0)
     sl = [] # final slenderness array (corresponds to contour on level 0)
     rho_slider = bu.Float(0.01)
+    ld_slider = bu.Float(1)
+    indicator_corresponds_to_ld_slider = True
 
     @tr.observe('rho_slider')
     def _update_dp_according_to_rho(self, event):
         if len(self.rho) != 0:
-            dp = self.dp
-            bd = dp.mc.get_bd()
-            A_s = self.rho_slider * bd
-            dp.mc.cross_section_layout.items[0].A = A_s
+            self._update_dp_according_to_slider(self.dp)
+            self._update_dp_according_to_slider(self.dp_design)
+        else:
+            print('Generate l/d curves first!')
+        self.indicator_corresponds_to_ld_slider = True
 
-            sl = np.interp(self.rho_slider, self.rho, self.sl)
-            # TODO, this works only if we have one reinf layer AT THE BOTTOM!
-            d = dp.mc.cross_section_shape_.H - dp.mc.cross_section_layout.items[0].z
-            dp.beam_design.system_.L = sl * d
-            dp.mc.state_changed = True
+    @tr.observe('ld_slider')
+    def _update_dp_according_to_ld(self, event):
+        d = self.dp.mc.cross_section_shape_.H - list(self.dp.mc.cross_section_layout.items.values())[0].z
+        self.dp.beam_design.system_.L = self.ld_slider * d
+        self.dp_design.beam_design.system_.L = self.ld_slider * d
+        self.indicator_corresponds_to_ld_slider = False
+
+    def _update_dp_according_to_slider(self, dp):
+        bd = dp.mc.get_bd()
+        A_s = self.rho_slider * bd
+        list(dp.mc.cross_section_layout.items.values())[0].A = A_s
+
+        sl = np.interp(self.rho_slider, self.rho, self.sl)
+        # TODO, this works only if we have one reinf layer AT THE BOTTOM!
+        d = dp.mc.cross_section_shape_.H - list(dp.mc.cross_section_layout.items.values())[0].z
+        dp.beam_design.system_.L = sl * d
+        dp.mc.state_changed = True
 
     @tr.observe('apply_material_factors')
     @tr.observe('system_type')
@@ -108,11 +129,13 @@ class BeamSLSCurve(bu.Model):
     @tr.observe('rein_type')
     @tr.observe('use_f_ctm_fl')
     def _update_dp(self, event):
-        self.dp = self._get_dp()
+        self.dp = self._get_dp_and_update_dp_design()
 
     ipw_view = bu.View(
         bu.Item('rho_slider',
                 editor=bu.FloatRangeEditor(label=r'$\rho$', low=0, high=0.025, n_steps=100, continuous_update=False)),
+        bu.Item('ld_slider',
+                editor=bu.FloatRangeEditor(label=r'$l/d$', low=1, high=50, n_steps=100, continuous_update=False)),
         bu.Item('slenderness_min', latex='{l/d}_\mathrm{min}'),
         bu.Item('slenderness_max', latex='{l/d}_\mathrm{max}'),
         bu.Item('rho_min', latex=r'\rho_\mathrm{min}'),
@@ -142,7 +165,8 @@ class BeamSLSCurve(bu.Model):
         self._f_ctm = value
 
         # TODO: this update is a quick fix! tr.observe for f_ctm is not working to update dp
-        self.dp = self._get_dp()
+        self.dp = self._get_dp_and_update_dp_design()
+
     def _get_f_ctm(self):
         if self._f_ctm is not None:
             return self._f_ctm
@@ -162,7 +186,10 @@ class BeamSLSCurve(bu.Model):
 
         f_ct = f_ctm_fl if self.use_f_ctm_fl else self.f_ctm
         # Unfactor tensile strength (like El-Gha, where f_ctm is used)
-        eps_cr = (1.5/0.85) * f_ct / E if self.apply_material_factors else f_ct / E
+        # eps_cr = (1.5/0.85) * f_ct / E if self.apply_material_factors else f_ct / E
+
+        # TODO: check this, it might give bigger f_ctm due to using E_cm
+        eps_cr = f_ct / E
 
         mc = MKappa(low_kappa=0, high_kappa=0.00007, n_kappa=100)
         mc.cs_design.matrix = self.concrete_law
@@ -204,11 +231,12 @@ class BeamSLSCurve(bu.Model):
 
         if rein_type == 'steel':
             bl1 = ReinfLayer(name=rein_type, z=h - d, A=A_s, matmod=rein_type)
-            bl1.matmod_.trait_set(E_s=200000, f_sy=500, factor=1 / 1.15 if self.apply_material_factors else 1)
+            bl1.matmod_.trait_set(E_s=200000, f_sy=550, factor=1 / 1.15 if self.apply_material_factors else 1)
         elif rein_type == 'carbon_grid':
             bl1 = ReinfLayer(name=rein_type, z=h - d, A=A_s, matmod='carbon')
             # carbon material factors :
             # alpha_ft * alpha_f_eff / gamma_frp (see El-Ghadioui2020_PhD P. 122)
+            # bl1.matmod_.trait_set(E=100000, f_t=2000, factor=0.85 * 0.9 / 1.3 if self.apply_material_factors else 1)
             bl1.matmod_.trait_set(E=230000, f_t=3300, factor=0.85 * 0.9 / 1.3 if self.apply_material_factors else 1)
         elif rein_type == 'carbon_rebars':
             bl1 = ReinfLayer(name=rein_type, z=h - d, A=A_s, matmod='carbon')
@@ -230,12 +258,59 @@ class BeamSLSCurve(bu.Model):
 
         return dp
 
+    def _get_dp_and_update_dp_design(self):
+        dp1 = self._get_dp()
+        dp2 = self._get_dp()
+        self._update_dp_design(dp2)
+        return dp1
+
+    def _update_dp_design(self, dp_design):
+        f_ck = self.f_ck
+
+        E_k = f_ck / EC2.get_eps_c3(f_ck)
+
+        if f_ck < 100:
+            dp_design.mc.cs_design.matrix = 'EC2 with plateau'
+            dp_design.mc.cs_design.matrix_.factor = 0.85 / 1.5
+            dp_design.mc.cs_design.matrix_.f_cm = f_ck + 8
+        else:
+            dp_design.mc.cs_design.matrix = 'piecewise linear'
+            dp_design.mc.cs_design.matrix_.trait_set(
+                factor=0.85 / 1.5,
+                E_cc=E_k,
+                E_ct=E_k,
+                eps_cy=EC2.get_eps_c3(f_ck),
+                eps_cu=EC2.get_eps_cu3(f_ck),
+            )
+
+        # f_ctm_fl = EC2.get_f_ctm_fl(f_ck, dp_design.mc.cross_section_shape_.H)
+        # f_ctm = f_ctm_fl if self.use_f_ctm_fl else self.f_ctm
+        # f_ctk = EC2.get_f_ctk_0_05(f_ck)
+        # eps_cr = f_ctk / E
+        # dp_design.mc.cs_design.matrix_.trait_set(
+        #     eps_cr=eps_cr,
+        #     eps_tu=eps_cr,
+        #     mu=0.0,
+        # )
+
+        for reinf_layer in list(dp_design.mc.cross_section_layout.items.values()):
+            reinf_type = reinf_layer.name
+            if reinf_type == 'steel':
+                reinf_layer.matmod_.factor = (1 / 1.15) * (1 / 1.1) # (char->design) * (mean->char)
+            elif reinf_type == 'carbon_grid':
+                # carbon material factors :
+                # alpha_ft * alpha_f_eff / gamma_frp (see El-Ghadioui2020_PhD P. 122)
+                reinf_layer.matmod_.factor = (0.85 * 0.9 / 1.3) * (0.85) # (char->design) * (mean->char)
+            elif reinf_type == 'carbon_rebars':
+                reinf_layer.matmod_.factor = (0.85 * 0.9 / 1.3) * (0.85) # (char->design) * (mean->char)
+
+        self.dp_design = dp_design
+
     def run(self, update_progress=lambda t: t):
         print('run started...')
         F_u_grid, F_s_grid, rho_grid, sl_grid = self.get_Fu_and_Fs()
         self.plot_with_ec2_curves(F_u_grid, F_s_grid, rho_grid, sl_grid,
                                   self.ax1 if hasattr(self, 'ax1') else None)
-
         print('run finished...')
 
     def reset(self):
@@ -243,16 +318,34 @@ class BeamSLSCurve(bu.Model):
         pass
 
     def subplots(self, fig):
-        self.ax1 = fig.subplots(1, 1)
-        return self.ax1
+        self.ax1, self.ax2 = fig.subplots(2, 1)
+        return self.ax1, self.ax2
 
     def update_plot(self, axes):
+        sl_curve_ax, ld_ax = axes
         if len(self.rho) != 0:
-            sl = np.interp(self.rho_slider, self.rho, self.sl)
-            axes.plot(self.rho_slider, sl, color='orange', marker='o')
+            if self.indicator_corresponds_to_ld_slider:
+                sl = np.interp(self.rho_slider, self.rho, self.sl)
+                sl_curve_ax.plot(self.rho_slider, sl, color='orange', marker='o')
+            else:
+                sl_curve_ax.plot(self.rho_slider, self.ld_slider, color='orange', marker='o')
         if hasattr(self, 'F_u_grid'):
             if len(self.F_u_grid) != 0:
-                self.plot_with_ec2_curves(self.F_u_grid, self.F_s_grid, self.rho_grid, self.sl_grid, axes)
+                self.plot_with_ec2_curves(self.F_u_grid, self.F_s_grid, self.rho_grid, self.sl_grid, sl_curve_ax)
+        self.plot_ld_curves(ld_ax)
+
+    def plot_ld_curves(self, ax):
+        eta = self.sls_to_uls_ratio
+        self.dp.w_SLS = True
+
+        self.dp.plot_fw_with_fmax(ax, f_max_label=r'$F_\mathrm{mean, u}$', f_max_color='black')
+        self.dp_design.plot_fw_with_fmax(ax, f_max_label=r'$F_\mathrm{design, u}$')
+        F_ULS_design = abs(self.dp_design.final_plot_F_scale * self.dp_design.beam_design.system_.F)
+        F_SLS_design = eta * F_ULS_design
+
+        ax.axhline(y=F_SLS_design, linestyle='--', color='r')
+        ax.annotate(r'$F_{\mathrm{design,~SLS,~qp}} = $' + str(round(F_SLS_design, 2)), xy=(0, 1.06 * F_SLS_design),
+                    color='r')
 
     # not used
     def save(self):
@@ -266,7 +359,7 @@ class BeamSLSCurve(bu.Model):
     # not used
     def save_data_vars_in_json(self, f_ck, dp, path):
         mc = dp.mc
-        rein = mc.cross_section_layout.items
+        rein = list(mc.cross_section_layout.items.values())
         output_data = {'mc.n_m': mc.n_m,
                        'mc.n_kappa': mc.n_kappa,
                        'mc.low_kappa': mc.low_kappa,
@@ -287,22 +380,31 @@ class BeamSLSCurve(bu.Model):
             json.dump(output_data, outfile, sort_keys=True, indent=4)
 
     def get_Fu_and_Fs(self, upper_reinforcement=False, plot=False):
+        self.F_u_design_grid, self.F_s_design_grid, _, _, _, _ = self._get_grids(self.dp_design, calc_shear=False, mean=False)
+        self.F_SLS_qp_design_grid = self.sls_to_uls_ratio * self.F_u_design_grid
+        dp_grids = self._get_grids(self.dp, calc_shear=True, mean=True)
+        self.F_u_grid, self.F_s_grid, self.rho_grid, self.sl_grid, self.F_u_shear_grid, self.w_SLS_qp_grid = dp_grids
+
+        self.F_u_design_to_mean_grid = self.F_u_design_grid / self.F_u_grid
+        return self.F_u_grid, self.F_s_grid, self.rho_grid, self.sl_grid
+
+
+    def _get_grids(self, dp, upper_reinforcement=False, plot=False, calc_shear=False, mean=True):
 
         slenderness_range = self.slenderness_range
         rho_range = self.rho_range
 
-        dp = self.dp
-
         if upper_reinforcement:
-            d = dp.mc.cross_section_layout.items[0].z
+            d = list(dp.mc.cross_section_layout.items.values())[0].z
         else:
-            d = dp.mc.cross_section_shape_.H - dp.mc.cross_section_layout.items[0].z
+            d = dp.mc.cross_section_shape_.H - list(dp.mc.cross_section_layout.items.values())[0].z
 
         bd = dp.mc.get_bd(upper_reinforcement = upper_reinforcement)
 
         rho_grid, sl_grid = np.meshgrid(rho_range, slenderness_range)
         F_u_grid = np.zeros_like(rho_grid)
         F_s_grid = np.zeros_like(rho_grid)
+        w_SLS_qp_grid = np.zeros_like(rho_grid)
         F_u_shear_grid = np.zeros_like(rho_grid)
 
         if plot:
@@ -322,7 +424,7 @@ class BeamSLSCurve(bu.Model):
 
                 # assigning the grid area (area_g) to the reinforcement area variable
                 A_j_g = rho * bd
-                dp.mc.cross_section_layout.items[0].A = A_j_g
+                list(dp.mc.cross_section_layout.items.values())[0].A = A_j_g
 
                 # assigning the grid length (L_g) to the beam length variable
                 L_g = sl * d
@@ -342,17 +444,16 @@ class BeamSLSCurve(bu.Model):
                 F_u = max(F_data)
                 F_s = np.interp(w_s, w_data, F_data, right=F_u * 2)
 
-                if dp.shear_force_can_be_calculated():
+                if calc_shear and dp.shear_force_can_be_calculated():
                     F_u_shear_grid[rho_idx, sl_idx] = dp.get_nm_shear_force_capacity()
                 F_u_grid[rho_idx, sl_idx] = F_u
                 F_s_grid[rho_idx, sl_idx] = F_s
 
-        self.F_u_shear_grid = F_u_shear_grid
-        self.F_u_grid = F_u_grid
-        self.F_s_grid = F_s_grid
-        self.rho_grid = rho_grid
-        self.sl_grid = sl_grid
-        return F_u_grid, F_s_grid, rho_grid, sl_grid
+                if mean:
+                    F_SLS = self.sls_to_uls_ratio * self.F_u_design_grid[rho_idx, sl_idx]
+                    w_SLS_qp_grid[rho_idx, sl_idx] = np.interp(F_SLS, F_data, w_data, right=max(w_data) * 2)
+
+        return F_u_grid, F_s_grid, rho_grid, sl_grid, F_u_shear_grid, w_SLS_qp_grid
 
     def plot_with_ec2_curves(self, F_u_grid, F_s_grid, rho_grid, sl_grid, ax=None, label=None):
         if not ax:
@@ -360,7 +461,7 @@ class BeamSLSCurve(bu.Model):
 
         color = np.random.rand(3, )
 
-        z = F_u_grid / F_s_grid - 1. / self.sls_to_uls_ratio
+        z = F_u_grid / F_s_grid - 1. / (self.sls_to_uls_ratio * self.F_u_design_to_mean_grid)
         cs = ax.contour(rho_grid, sl_grid, z, levels=[0], colors=[color])
         if label:
             cs.collections[0].set_label(label)

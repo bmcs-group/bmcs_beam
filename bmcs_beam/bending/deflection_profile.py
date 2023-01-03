@@ -262,21 +262,23 @@ class DeflectionProfile(Model):
         mpl_align_yaxis_to_zero(ax_w, ax_k)
         mpl_show_one_legend_for_twin_axes(ax_w, ax_k)
 
-    def plot_fw_with_fmax(self, ax_Fw):
+    def plot_fw_with_fmax(self, ax_Fw, f_max_label = r'$F_{\mathrm{tot,~max}}$', f_max_color='r'):
         self.plot_fw(ax_Fw)
         self.plot_exp_fw(ax_Fw)
         current_F = abs(self.final_plot_F_scale * self.beam_design.system_.F)
         w_SLS = self.beam_design.system_.L / 250
         if self.w_SLS:
-            ax_Fw.plot([w_SLS, w_SLS], [0, current_F], color='green')
-        ax_Fw.axhline(y=current_F, color='r')
-        ax_Fw.annotate(r'$F_{\mathrm{tot,~max}} = $' + str(round(current_F, 2)) + ' ' + self.F_unit, xy=(0, 1.02 * current_F), color='r')
+            ax_Fw.plot([w_SLS, w_SLS], [0, 1.05 * current_F], linestyle='--', color='green')
+            ax_Fw.annotate(r'$L/250$', xy=(1.02 * w_SLS, 0), color='green')
+        ax_Fw.axhline(y=current_F, linestyle='--', color=f_max_color)
+        ax_Fw.annotate(f_max_label + r'$ = $' + str(round(current_F, 2)) + ' ' + self.F_unit, xy=(0, 1.04 * current_F), color=f_max_color)
 
         if self.shear_force_can_be_calculated():
             self.get_nm_shear_force_capacity(should_print=True)
 
     def shear_force_can_be_calculated(self):
         # WHY does it have to be carbon here?
+        # Because currently, shear calculation based on carbon empirical equations is implemented
         values = list(self.mc.cross_section_layout.items.values())
         return values[0].matmod == 'carbon' \
                and self.mc.cross_section_shape == 'rectangle'
@@ -318,12 +320,12 @@ class DeflectionProfile(Model):
         mc = self.mc
         if system != '4pb' and system != 'simple_beam_dist_load':
             return
-        if mc.cross_section_layout.items[0].matmod != 'carbon':
+        if list(mc.cross_section_layout.items.values())[0].matmod != 'carbon':
             return
 
-        z = mc.cross_section_layout.items[0].z
-        A_nm = mc.cross_section_layout.items[0].A
-        E_nm = mc.cross_section_layout.items[0].matmod_.E
+        z = list(mc.cross_section_layout.items.values())[0].z
+        A_nm = list(mc.cross_section_layout.items.values())[0].A
+        E_nm = list(mc.cross_section_layout.items.values())[0].matmod_.E
         d = mc.cross_section_shape_.H - z
         b = mc.cross_section_shape_.B
         L = self.beam_design.system_.L
