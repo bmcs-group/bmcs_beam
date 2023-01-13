@@ -12,8 +12,6 @@ dependencies:
 - ipympl
 - ipytree
 - shapely
-- pandas
-- jupyterlab
 - importlib_resources
 - pip
 - pip:
