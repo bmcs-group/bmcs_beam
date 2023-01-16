@@ -7,7 +7,6 @@ dependencies:
 - numpy
 - sympy
 - scipy
-- k3d
 - ipywidgets
 - ipympl
 - ipytree
