@@ -20,4 +20,4 @@ dependencies:
   - bmcs-utils==0.0.32a0
   - bmcs-ibvpy==0.0.25a0
   - bmcs-cross-section==0.0.55a0
-  - -e.
+  - bmcs-beam==0.0.18a0
