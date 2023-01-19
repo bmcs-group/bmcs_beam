@@ -48,7 +48,7 @@ class BeamSLSCurve(bu.Model):
     # tree = ['dp']
 
     n_i = bu.Int(3)
-    dense_quarter = bu.Bool
+    dense_quarter = bu.Bool(False)
 
     rho_range = tr.Property(depends_on='rho_max, rho_max, n_i, dense_quarter')
 
@@ -85,13 +85,13 @@ class BeamSLSCurve(bu.Model):
     system_type = bu.Str('dist')  # system_type can be '4pb' or '3pb' or 'dist'
     concrete_law = bu.Str('EC2')  # or 'piecewise linear' or 'EC2 with plateau'
     f_ck = bu.Float(103-8) # Concrete C3, f_cm = 103
-    rein_type = bu.Str('steel') # can be 'carbon_grid', 'carbon_rebars'
-    use_f_ctm_fl = bu.Bool(True)
+    rein_type = bu.Str('steel') # can be 'carbon_grid', 'carbon_rebars', 'carbon_elg'
+    use_f_ctm_fl = bu.Bool(False)
 
     rho = [] # final rho array (corresponds to contour on level 0)
     sl = [] # final slenderness array (corresponds to contour on level 0)
     rho_slider = bu.Float(0.01)
-    ld_slider = bu.Float(1)
+    ld_slider = bu.Float(10)
     indicator_corresponds_to_ld_slider = True
 
     @tr.observe('rho_slider')
@@ -135,7 +135,7 @@ class BeamSLSCurve(bu.Model):
         bu.Item('rho_slider',
                 editor=bu.FloatRangeEditor(label=r'$\rho$', low=0, high=0.025, n_steps=100, continuous_update=False)),
         bu.Item('ld_slider',
-                editor=bu.FloatRangeEditor(label=r'$l/d$', low=1, high=50, n_steps=100, continuous_update=False)),
+                editor=bu.FloatRangeEditor(label=r'$l/d$', low=1, high=50, n_steps=101, continuous_update=False)),
         bu.Item('slenderness_min', latex='{l/d}_\mathrm{min}'),
         bu.Item('slenderness_max', latex='{l/d}_\mathrm{max}'),
         bu.Item('rho_min', latex=r'\rho_\mathrm{min}'),
@@ -235,9 +235,14 @@ class BeamSLSCurve(bu.Model):
         elif rein_type == 'carbon_grid':
             bl1 = ReinfLayer(name=rein_type, z=h - d, A=A_s, matmod='carbon')
             # carbon material factors :
-            # alpha_ft * alpha_f_eff / gamma_frp (see El-Ghadioui2020_PhD P. 122)
-            # bl1.matmod_.trait_set(E=100000, f_t=2000, factor=0.85 * 0.9 / 1.3 if self.apply_material_factors else 1)
-            bl1.matmod_.trait_set(E=230000, f_t=3300, factor=0.85 * 0.9 / 1.3 if self.apply_material_factors else 1)
+            # alpha_ft * alpha_f_eff / gamma_frp (see El-Ghadioui2020_PhD P. 122) # factor = (char->design) * (mean->char)
+            bl1.matmod_.trait_set(E=230000, f_t=3300, factor=(0.85 * 0.9 / 1.3) * (0.85) if self.apply_material_factors else 1)
+        elif rein_type == 'carbon_elg':
+            bl1 = ReinfLayer(name=rein_type, z=h - d, A=A_s, matmod='carbon')
+            # carbon material factors :
+            # alpha_ft * alpha_f_eff / gamma_frp (see El-Ghadioui2020_PhD P. 122) # factor = (char->design) * (mean->char)
+            f_tm = 1000 * 1.3 / (0.85 * 0.85 * 0.9)
+            bl1.matmod_.trait_set(E=100000, f_t= f_tm, factor=(0.85 * 0.9 / 1.3) * (0.85) if self.apply_material_factors else 1)
         elif rein_type == 'carbon_rebars':
             bl1 = ReinfLayer(name=rein_type, z=h - d, A=A_s, matmod='carbon')
             # carbon material factors :
@@ -297,11 +302,9 @@ class BeamSLSCurve(bu.Model):
             reinf_type = reinf_layer.name
             if reinf_type == 'steel':
                 reinf_layer.matmod_.factor = (1 / 1.15) * (1 / 1.1) # (char->design) * (mean->char)
-            elif reinf_type == 'carbon_grid':
+            else:
                 # carbon material factors :
                 # alpha_ft * alpha_f_eff / gamma_frp (see El-Ghadioui2020_PhD P. 122)
-                reinf_layer.matmod_.factor = (0.85 * 0.9 / 1.3) * (0.85) # (char->design) * (mean->char)
-            elif reinf_type == 'carbon_rebars':
                 reinf_layer.matmod_.factor = (0.85 * 0.9 / 1.3) * (0.85) # (char->design) * (mean->char)
 
         self.dp_design = dp_design
