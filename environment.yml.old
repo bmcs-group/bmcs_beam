@@ -1,0 +1,23 @@
+name: bmcs_env
+channels:
+- conda-forge
+dependencies:
+- appmode
+- jupyter_contrib_nbextensions
+- traits>=6.1.1
+- matplotlib-base
+- numpy
+- scipy
+- sympy<=1.7.1 # the is required, with the new version sympy 1.8, the load-deflection curve is wrong (TODO, investigate)
+- openpyxl
+- ipywidgets
+- ipympl
+- shapely
+- ipytree
+- pip
+- pip:
+  - anastruct==1.2.0
+  - bmcs-utils
+  - bmcs-cross-section
+  - bmcs-beam
+  - -e .
