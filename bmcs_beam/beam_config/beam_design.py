@@ -25,7 +25,7 @@ class BeamDesign(CrossSectionDesign):
                                  ])
 
     depends_on = ['matrix', 'cross_section_layout', 'cross_section_shape', 'system']
-    ipw_tree = ['system']
+    tree = ['system']
 
     L = tr.Property(depends_on='state_changed')
     @tr.cached_property
