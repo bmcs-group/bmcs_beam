@@ -1,0 +1,1 @@
+Because of the steel object under the beam, a jump in the force happended. However, the steel block was removed and the test showed another increase in the force beyond the force before contacting steel (24.4 kN) so force jump values where simply ignored
