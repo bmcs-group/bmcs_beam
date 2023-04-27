@@ -9,9 +9,11 @@ struct = SystemElements()
 struct.add_multiple_elements([[0, 0], [L, 0]], 2)
 
 struct.add_support_hinged(1)
-struct.add_support_roll(3)
+struct.add_support_roll(2)
 
-struct.point_load(2, Fy=F)
+struct.point_load(3, Fy=F)
+
+struct.q_load(-50, element_id=np.array([1]))
 
 struct.solve()
 
@@ -22,6 +24,8 @@ struct.show_structure()
 # struct.show_shear_force()
 struct.show_bending_moment()
 # struct.show_reaction_force()
+
+struct.show_results()
 
 
 # shear_xy = struct.show_shear_force(values_only=True, factor=1)

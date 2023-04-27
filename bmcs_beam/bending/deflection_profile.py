@@ -120,17 +120,19 @@ class DeflectionProfile(Model):
         # TODO rename phi to theta
         kappa_x = self.get_kappa_x() # + 2e-6 #+ self.get_kappa_shrinkage()
         # Kappa = 1/R = d_phi/d_x
-        phi_x = cumtrapz(kappa_x, self.beam_design.system_.x, initial=0)
+        phi_int_x = cumtrapz(kappa_x, self.beam_design.system_.x, initial=0)
 
-        # resolve the integration constant by requiring zero curvature
-        # at the midspan of the beam
-        # TODO [SD] this is specific to 3 point bending - generalize
-        #           for other loading conditions.
-        #           HS: I guess this works for 4pb too (for symmetric beams)
-
+        # ----- Applying rotation bcs to resolve integration constant -----
+        # ----- rotation = integrated_rotation + c -----
         if not isinstance(self.beam_design.system_, CantileverDistLoadSystem):
                 # and not isinstance(self.beam_design.system_, FixedAndRollerDistLoadBeamSystem):
-            phi_x -= np.interp(self.beam_design.system_.L / 2, self.beam_design.system_.x, phi_x)
+            # The bc for symmetric beams (3PB, 4PB) is (rotation(L/2) = 0 <-> rotation(x_cond_1) = rot_cond_1)
+            # -> integrated_rotation(L/2) + c = 0 - > c = -integrated_rotation(L/2) + 0
+            # TODO this bc works only for symmetric beams - generalize for other systems
+            L = self.beam_design.system_.L
+            x_cond_1, rot_cond_1 = (L / 2, 0)
+            int_constant = -np.interp(x_cond_1, self.beam_design.system_.x, phi_int_x) + rot_cond_1
+            phi_x = phi_int_x + int_constant
         # elif isinstance(self.beam_design.system_, FixedAndRollerDistLoadBeamSystem):
         #     phi_x -= phi_x[-1]
 
@@ -150,12 +152,22 @@ class DeflectionProfile(Model):
         Profile of deflection along the beam
         """
         phi_x = self.get_phi_x()
-        w_x = cumtrapz(phi_x, self.beam_design.system_.x, initial=0)
-        # resolve the integration constant by requiring zero deflection
-        # at the left support - the right one comes automatically
-        # TODO [SR, HS] this is specific to 3 point bending - generalize
-        #           for other loading conditions.
-        #           HS: I guess this works for 4pb too (for symmetric beams)
+        w_int_x = cumtrapz(phi_x, self.beam_design.system_.x, initial=0)
+
+        # # ----- Applying deflection bcs to resolve integration constant -----
+        # # ----- deflection = integrated_deflection + c (w_x = w_int_x + int_constant) -----
+        # # The bc for simply supported beam or simple cantilever we require zero deflection at the
+        # # left support - the right one comes automatically
+        # # -> integrated_deflection(0) + c = 0 - > c = -integrated_rotation(0)
+        # # TODO: generalize for other systems
+        # L = self.beam_design.system_.L
+        # x_cond_1, w_cond_1 = (0, 0)
+        # int_constant = -np.interp(x_cond_1, self.beam_design.system_.x, w_int_x) + w_cond_1
+        # w_x = w_int_x + int_constant
+
+        # For efficiency, the following is used as int_constant = 0 in the case above:
+        w_x = w_int_x
+
         # if self.beam_design.beam_conf_name != BoundaryConfig.FIXED_AND_ROLLER_SUPPORT_DIST_LOAD \
         #         and self.beam_design.beam_conf_name != BoundaryConfig.CANTILEVER_DIST_LOAD:
         #     w_x += w_x[0]
