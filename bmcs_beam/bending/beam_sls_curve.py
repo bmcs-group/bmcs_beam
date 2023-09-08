@@ -34,6 +34,10 @@ class BeamSLSCurve(bu.Model):
     slenderness_max = bu.Int(50)
     rho_min = bu.Float(0.0002)
     rho_max = bu.Float(0.025)
+    b = bu.Float(1000)
+    h = bu.Float(300)
+    high_kappa = bu.Float(0.00007)
+    n_kappa = bu.Int(250)
 
     dp = bu.Instance(DeflectionProfile)
 
@@ -175,8 +179,8 @@ class BeamSLSCurve(bu.Model):
 
     def _get_dp(self):
         print('dp updated!')
-        b = 1000
-        h = 300
+        b = self.b
+        h = self.h
         d = 0.9 * h
         f_ck = self.f_ck
         rein_type = self.rein_type
@@ -191,7 +195,7 @@ class BeamSLSCurve(bu.Model):
         # TODO: check this, it might give bigger f_ctm due to using E_cm
         eps_cr = f_ct / E
 
-        mc = MKappa(low_kappa=0, high_kappa=0.00007, n_kappa=100)
+        mc = MKappa(low_kappa=0, high_kappa=self.high_kappa, n_kappa=self.n_kappa)
         mc.cs_design.matrix = self.concrete_law
         mc.cs_design.matrix_.trait_set(
             factor=0.85 / 1.5 if self.apply_material_factors else 1,
@@ -251,7 +255,7 @@ class BeamSLSCurve(bu.Model):
         mc.cross_section_layout.add_layer(bl1)
         # mc.state_changed = True
 
-        dp = DeflectionProfile(mc=mc)
+        dp = DeflectionProfile(mc=mc, n_load_steps=100)
         if self.system_type == '4pb':
             dp.beam_design.system = '4pb'
         elif self.system_type == '3pb':

@@ -202,11 +202,20 @@ class DeflectionProfile(Model):
     # def reset(self):
     #     self.theta_F = 0
 
+    def _get_F_arr(self, F_max):
+        n_load_steps = self.n_load_steps
+        # Make F_arr list denser up to (0.2 * the range) to capture cracking load properly, otherwise
+        # deflections in SLS might be inaccurate
+        n_1 = int(0.4 * n_load_steps)
+        n_2 = n_load_steps - n_1
+        return np.concatenate((np.linspace(0, 0.2 * F_max, n_1, endpoint=False),
+                                   np.linspace(0.2 * F_max, F_max, n_2)))
+
     F_max_old = Float
 
     def get_Fw(self):
         F_max = self.F_max
-        F_arr = np.linspace(0, F_max, self.n_load_steps)
+        F_arr = self._get_F_arr(F_max)
         w_list = []
         # @todo [SR,RC]: separate the slider theta_F from the calculation
         #                of the datapoints load deflection curve.
