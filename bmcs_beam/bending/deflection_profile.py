@@ -350,7 +350,7 @@ class DeflectionProfile(Model):
         d = mc.cross_section_shape_.H - z
         b = mc.cross_section_shape_.B
         L = self.beam_design.system_.L
-        f_ck = mc.cs_design.matrix_.f_cm - 8
+        f_ck = mc.cs_design.concrete_.f_cm - 8
 
         C_Rk_c = 0.219
         gamma = 1

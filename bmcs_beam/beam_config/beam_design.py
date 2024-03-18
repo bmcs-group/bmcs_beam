@@ -24,7 +24,7 @@ class BeamDesign(CrossSectionDesign):
                                  # ('single_moment', CarbonReinfMatMod),
                                  ])
 
-    depends_on = ['matrix', 'cross_section_layout', 'cross_section_shape', 'system']
+    depends_on = ['concrete', 'cross_section_layout', 'cross_section_shape', 'system']
     tree = ['system']
 
     L = tr.Property(depends_on='state_changed')

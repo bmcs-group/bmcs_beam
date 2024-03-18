@@ -26,7 +26,7 @@ class BeamSLSCurve(bu.Model):
     - link to data cache identifying the directory where to store the
     interim results
     - dictionary based storage of the individual runs of the study
-      which makes it introspectable.
+      which makes it introspective.
     '''
 
     sls_to_uls_ratio = bu.Float(0.51)
@@ -196,8 +196,8 @@ class BeamSLSCurve(bu.Model):
         eps_cr = f_ct / E
 
         mc = MKappa(low_kappa=0, high_kappa=self.high_kappa, n_kappa=self.n_kappa)
-        mc.cs_design.matrix = self.concrete_law
-        mc.cs_design.matrix_.trait_set(
+        mc.cs_design.concrete = self.concrete_law
+        mc.cs_design.concrete_.trait_set(
             factor=0.85 / 1.5 if self.apply_material_factors else 1,
             eps_cr=eps_cr,
             eps_tu=eps_cr,
@@ -205,9 +205,9 @@ class BeamSLSCurve(bu.Model):
         )
 
         if self.concrete_law == 'EC2 with plateau' or self.concrete_law == 'EC2':
-            mc.cs_design.matrix_.trait_set(f_cm=EC2.get_f_cm(f_ck))
+            mc.cs_design.concrete_.trait_set(f_cm=EC2.get_f_cm(f_ck))
         elif self.concrete_law == 'piecewise linear':
-            mc.cs_design.matrix_.trait_set(
+            mc.cs_design.concrete_.trait_set(
                 E_cc=E,
                 E_ct=E,
                 eps_cy=EC2.get_eps_c3(f_ck),
@@ -215,8 +215,8 @@ class BeamSLSCurve(bu.Model):
             )
 
         # # The default uses f_ctm. Here, I will use f_ctm_fl (in EC2, they tested with both)
-        # mc.cs_design.matrix_.eps_cr = (EC2.get_f_ctm_fl(f_ck, h) * 1.5 / 0.85) / mc.cs_design.matrix_.E_ct
-        # mc.cs_design.matrix_.eps_tu = (EC2.get_f_ctm_fl(f_ck, h) * 1.5 / 0.85) / mc.cs_design.matrix_.E_ct
+        # mc.cs_design.concrete_.eps_cr = (EC2.get_f_ctm_fl(f_ck, h) * 1.5 / 0.85) / mc.cs_design.concrete_.E_ct
+        # mc.cs_design.concrete_.eps_tu = (EC2.get_f_ctm_fl(f_ck, h) * 1.5 / 0.85) / mc.cs_design.concrete_.E_ct
 
         mc.cross_section_shape_.B = b
         mc.cross_section_shape_.H = h
@@ -279,12 +279,12 @@ class BeamSLSCurve(bu.Model):
         E_k = f_ck / EC2.get_eps_c3(f_ck)
 
         if f_ck < 100:
-            dp_design.mc.cs_design.matrix = 'EC2 with plateau'
-            dp_design.mc.cs_design.matrix_.factor = 0.85 / 1.5
-            dp_design.mc.cs_design.matrix_.f_cm = f_ck + 8
+            dp_design.mc.cs_design.concrete = 'EC2 with plateau'
+            dp_design.mc.cs_design.concrete_.factor = 0.85 / 1.5
+            dp_design.mc.cs_design.concrete_.f_cm = f_ck + 8
         else:
-            dp_design.mc.cs_design.matrix = 'piecewise linear'
-            dp_design.mc.cs_design.matrix_.trait_set(
+            dp_design.mc.cs_design.concrete = 'piecewise linear'
+            dp_design.mc.cs_design.concrete_.trait_set(
                 factor=0.85 / 1.5,
                 E_cc=E_k,
                 E_ct=E_k,
@@ -296,7 +296,7 @@ class BeamSLSCurve(bu.Model):
         # f_ctm = f_ctm_fl if self.use_f_ctm_fl else self.f_ctm
         # f_ctk = EC2.get_f_ctk_0_05(f_ck)
         # eps_cr = f_ctk / E
-        # dp_design.mc.cs_design.matrix_.trait_set(
+        # dp_design.mc.cs_design.concrete_.trait_set(
         #     eps_cr=eps_cr,
         #     eps_tu=eps_cr,
         #     mu=0.0,
@@ -371,13 +371,13 @@ class BeamSLSCurve(bu.Model):
                        'mc.n_kappa': mc.n_kappa,
                        'mc.low_kappa': mc.low_kappa,
                        'mc.high_kappa': mc.high_kappa,
-                       'mc.E_cc': mc.cs_design.matrix_.E_cc,
-                       'mc.E_ct': mc.cs_design.matrix_.E_ct,
-                       'mc.eps_tu': mc.cs_design.matrix_.eps_tu,
-                       'mc.eps_cr': mc.cs_design.matrix_.eps_cr,
-                       'mc.eps_cy': mc.cs_design.matrix_.eps_cy,
-                       'mc.eps_cu': mc.cs_design.matrix_.eps_cu,
-                       'mc.mu': mc.cs_design.matrix_.mu,
+                       'mc.E_cc': mc.cs_design.concrete_.E_cc,
+                       'mc.E_ct': mc.cs_design.concrete_.E_ct,
+                       'mc.eps_tu': mc.cs_design.concrete_.eps_tu,
+                       'mc.eps_cr': mc.cs_design.concrete_.eps_cr,
+                       'mc.eps_cy': mc.cs_design.concrete_.eps_cy,
+                       'mc.eps_cu': mc.cs_design.concrete_.eps_cu,
+                       'mc.mu': mc.cs_design.concrete_.mu,
                        'f_ck': f_ck,
                        'rein[0].E': rein[0].matmod_.E,
                        'rein[0].z': rein[0].z,

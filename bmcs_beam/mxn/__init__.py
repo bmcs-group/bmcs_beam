@@ -15,8 +15,8 @@ from .cross_section_state import \
     CrossSectionState
 from .ecb_calib import \
     ECBCalib
-from .matrix_laws import \
-    MatrixLawBase
+from .concrete_laws import \
+    concreteLawBase
 from .mxn_diagram import \
     MxNDiagram
 from .mxn_tree_node import \
