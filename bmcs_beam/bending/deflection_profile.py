@@ -10,7 +10,7 @@ import bmcs_utils.api as bu
 
 from bmcs_beam.beam_config.beam_design import BeamDesign
 from bmcs_cross_section.mkappa import MKappa
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 import matplotlib.gridspec as gridspec
 
 from bmcs_beam.beam_config.boundary_conditions import BoundaryConditions, BoundaryConfig
@@ -120,7 +120,7 @@ class DeflectionProfile(Model):
         # TODO rename phi to theta
         kappa_x = self.get_kappa_x() # + 2e-6 #+ self.get_kappa_shrinkage()
         # Kappa = 1/R = d_phi/d_x
-        phi_int_x = cumtrapz(kappa_x, self.beam_design.system_.x, initial=0)
+        phi_int_x = cumulative_trapezoid(kappa_x, self.beam_design.system_.x, initial=0)
 
         # ----- Applying rotation bcs to resolve integration constant -----
         # ----- rotation = integrated_rotation + c -----
@@ -152,7 +152,7 @@ class DeflectionProfile(Model):
         Profile of deflection along the beam
         """
         phi_x = self.get_phi_x()
-        w_int_x = cumtrapz(phi_x, self.beam_design.system_.x, initial=0)
+        w_int_x = cumulative_trapezoid(phi_x, self.beam_design.system_.x, initial=0)
 
         # # ----- Applying deflection bcs to resolve integration constant -----
         # # ----- deflection = integrated_deflection + c (w_x = w_int_x + int_constant) -----
